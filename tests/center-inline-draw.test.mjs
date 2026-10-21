@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createDocument,FixtureElement} from './dom-fixture.mjs';
-import {START,fresh,submitOrder,balances} from '../public/expert-event-model.js';
+import {START,fresh,submitOrder,balances,claimDaily,draw} from '../public/expert-event-model.js';
 import {EVENT_KEY,eventNow,loadEvent,saveEvent,setEventClock} from '../public/expert-event-session.js';
 import {closeEventDialog} from '../public/expert-event-ui.js';
 
@@ -124,12 +124,88 @@ test('single-draw completion reveals once and uses only the selected advanced ti
   assert.equal(machine.dataset.phase,'dropping');
   t.mock.timers.tick(1);
   assert(h.dialog());
+  assert.equal(h.dialog().querySelector('.ev-guide-earn'),null,'an unspent guide must not attach onboarding to an advanced-ticket draw');
   assert.equal(h.document.querySelectorAll('.ev-center-result').length,1);
   assert.equal(h.snapshot().draws.length,1);
   assert.deepEqual(h.writes,[EVENT_KEY]);
   t.mock.timers.tick(10000);
   assert.equal(h.document.querySelectorAll('.ev-center-result').length,1);
   assert.equal(h.snapshot().draws.length,1);
+});
+
+test('a deferred first guide in the inline center explains continued earning and opens expert selection without another debit',async t=>{
+  const initial=claimDaily(orders(9),T).state;
+  initial.guideShownTicketId=initial.guideTicketId;
+  const h=await harness(t,initial);
+  let selections=0;
+  h.window.openExpertSelection=()=>{assert.equal(h.dialog(),null);selections++;};
+  h.click('[data-action="draw:1"]');
+  const saved=h.snapshot();
+  h.click('[data-action="skip-draw"]');
+  const result=h.dialog();
+  assert(result.classList.contains('ev-onboarding-result'));
+  assert.equal(result.getAttribute('aria-label'),'双11专鉴有礼');
+  assert.equal(saved.draws[0].rewards[0].type,'none');
+  assert.equal(saved.tickets.find(ticket=>ticket.firstGuide).remaining,0);
+  assert.match(result.querySelector('.ev-guide-distance').textContent,/再鉴\s*1\s*单，得高级抽奖券/);
+  assert.equal(result.querySelectorAll('.ev-guide-rewards .ev-reward-art').length,2);
+  assert.equal(result.querySelector('[data-result-again]'),null);
+  assert.equal(result.querySelector('[data-result-prizes]'),null);
+  assert.equal(result.querySelector('[data-result-expert]').textContent.trim(),'去专鉴赢抽奖券');
+  result.querySelector('[data-comfort-hug]').click();
+  assert.match(result.querySelector('[data-comfort-caption]').textContent,/抱抱已送达/);
+  result.querySelector('[data-result-expert]').click();
+  assert.equal(selections,1);
+  assert.equal(h.dialog(),null);
+  assert.deepEqual(h.snapshot(),saved);
+  assert.deepEqual(h.writes,[EVENT_KEY]);
+});
+
+test('post-guide later action keeps the current center and selected pool without re-awarding or re-drawing',async t=>{
+  const h=await harness(t,orders(0));
+  h.click('[data-action="draw:1"]');
+  h.click('[data-action="skip-draw"]');
+  const saved=h.snapshot(),later=h.dialog().querySelector('[data-result-later]');
+  later.click();later.click();
+  t.mock.timers.tick(10000);
+  assert.equal(h.dialog(),null);
+  assert.equal(h.document.querySelector('#tab-lottery').getAttribute('aria-selected'),'true');
+  assert.equal(h.document.querySelector('[data-action="pool:ordinary"]').getAttribute('aria-selected'),'true');
+  assert.deepEqual(h.snapshot(),saved);
+  assert.deepEqual(h.writes,[EVENT_KEY]);
+});
+
+test('inline five-draw containing a deferred guide retains winning vouchers and the My Prizes destination',async t=>{
+  const h=await harness(t,orders(8));
+  h.click('[data-action="draw:5"]');
+  h.click('[data-action="skip-draw"]');
+  const saved=h.snapshot(),result=h.dialog();
+  assert.equal(saved.draws[0].rewards.filter(reward=>reward.type==='none').length,1);
+  assert.equal(saved.draws[0].rewards.filter(reward=>reward.type==='voucher').length,4);
+  assert.match(result.querySelector('.coupon-value').textContent,/×4/);
+  assert.equal(result.querySelectorAll('.ev-result-card.is-empty').length,1);
+  assert(result.querySelector('.ev-guide-earn'));
+  assert.equal(result.querySelector('[data-result-again]'),null);
+  result.querySelector('[data-result-prizes]').click();
+  assert.equal(h.dialog(),null);
+  assert.equal(h.document.querySelector('#tab-prizes').getAttribute('aria-selected'),'true');
+  assert(h.document.querySelector(`[data-action="result:expert:${saved.draws[0].id}"]`));
+  assert.deepEqual(h.snapshot(),saved);
+  assert.deepEqual(h.writes,[EVENT_KEY]);
+});
+
+test('an already consumed first guide does not alter regular inline results or repeat controls',async t=>{
+  const claimed=claimDaily(orders(4),T).state;
+  const initial=draw(claimed,{pool:'ordinary',count:1,requestId:'previous-guide'},T+10,()=>.4).state;
+  const h=await harness(t,initial);
+  h.click('[data-action="draw:1"]');
+  h.click('[data-action="skip-draw"]');
+  const result=h.dialog();
+  assert.equal(result.getAttribute('aria-label'),'扭蛋结果');
+  assert.equal(result.querySelector('.ev-guide-earn'),null);
+  assert.equal(result.querySelector('[data-result-later]'),null);
+  assert(result.querySelector('[data-result-again]'));
+  assert.equal(result.querySelector('[data-result-prizes]').classList.contains('ev-primary'),true);
 });
 
 test('switching to My Prizes during animation retains the committed batch and cancels late result overlays',async t=>{
@@ -194,6 +270,28 @@ test('Double 11 ticket status switches stay inline, include both pools, and neve
   assert.match(h.document.querySelector('#et-ticket-records').textContent,/高级抽奖券/);
   assert.deepEqual(h.snapshot(),before);
   assert.deepEqual(h.balance(),balance);
+  assert.deepEqual(h.writes,[]);
+});
+
+test('the compact ranking entry opens both boards while the removed detail entry leaves inline ticket management intact',async t=>{
+  const h=await harness(t,orders(10)),before=h.snapshot();
+  assert.equal(h.document.querySelector('[data-action="ticket-details"]'),null);
+  const entry=h.document.querySelector('.ac-ranking-entry');
+  assert.equal(entry.getAttribute('aria-label'),'查看专鉴王者榜');
+  assert(entry.querySelector('.ac-ranking-emblem'));
+  h.click(entry);
+  const ranking=h.document.querySelector('.ev-ranking-dialog');
+  assert(ranking?.open);
+  assert.equal(ranking.getAttribute('aria-label'),'专鉴王者榜');
+  assert.equal(ranking.querySelector('[data-kind="true"]').getAttribute('aria-selected'),'true');
+  ranking.querySelector('[data-kind="false"]').click();
+  assert.equal(ranking.querySelector('[data-kind="false"]').getAttribute('aria-selected'),'true');
+  ranking.querySelector('[data-ev-close]').click();
+  assert.equal(h.document.querySelector('.ev-ranking-dialog'),null);
+  h.click('[data-action="tickets-used"]');
+  assert.equal(h.document.querySelector('[data-action="tickets-used"]').getAttribute('aria-pressed'),'true');
+  assert(h.document.querySelector('#et-ticket-records'));
+  assert.deepEqual(h.snapshot(),before);
   assert.deepEqual(h.writes,[]);
 });
 

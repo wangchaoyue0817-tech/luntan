@@ -192,11 +192,78 @@
 .ev-rules h3{font-size:14px;color:#eee1ff;margin:20px 0 6px;font-weight:600}
 .ev-rules p{margin:8px 0}
 .ev-rules .ev-demo-note{font-size:11px;color:#b7a4d4}
-.ev-dialog .eh-guide{padding-top:2px}
-.ev-dialog .eh-guide-ticket{height:142px}
-.ev-dialog .eh-guide-ticket .ev-reward-art{width:190px;height:134px}
-.ev-dialog .eh-guide h2{font-size:24px;margin:8px 0}
-.ev-dialog .eh-guide p{color:var(--ld-copy);font-size:12px;margin:0 0 20px}
+/* First gift: one illustrated scene teaches the ticket-to-machine interaction. */
+.ev-dialog.ev-onboarding-dialog,.ev-dialog.ev-onboarding-result{
+ background:radial-gradient(ellipse at 50% 32%,#ac7ee72d,transparent 57%),linear-gradient(155deg,#322466,#242051 68%,#302058);
+ border-color:#c3a4f25c;box-shadow:inset 0 1px #f0dfff38,0 24px 80px #14134266;
+}
+.ev-onboarding-dialog .ev-dialog-head,.ev-onboarding-result .ev-dialog-head{background:transparent;backdrop-filter:none}
+.ev-onboarding-dialog .ev-dialog-head{min-height:60px;padding-left:22px}
+.ev-onboarding-dialog .ev-dialog-head>span{font-size:21px;font-weight:650;letter-spacing:-.4px;color:#f8eeff}
+.ev-onboarding{text-align:center;padding:0 0 1px}
+.ev-onboarding-lead{margin:0 0 9px;color:#e3cffa;font-size:16px;line-height:1.6;letter-spacing:.1px}
+.ev-onboarding-scene{position:relative;isolation:isolate;min-width:0;width:100%;max-width:350px;aspect-ratio:1.22;margin:0 auto 12px}
+.ev-onboarding-scene:before{content:"";position:absolute;z-index:-1;inset:14% 3% 2%;border-radius:50%;background:radial-gradient(ellipse,#d0a5ff1e,transparent 66%);pointer-events:none}
+.ev-onboarding-scene:after{content:"";position:absolute;z-index:-1;left:15%;right:15%;bottom:3%;height:11%;border-radius:50%;background:radial-gradient(ellipse,#ac7ddc35,transparent 72%);filter:blur(6px);pointer-events:none}
+.ev-onboarding-machine{position:absolute;inset:0 -3% 0 0;display:flex;align-items:center;justify-content:center;padding-bottom:16px}
+.ev-onboarding-machine .gm-machine{width:100%;max-width:340px}
+.ev-onboarding-machine .gm-marquee{display:none}
+.ev-dialog .ev-onboarding-ticket.eh-guide-ticket{position:absolute;z-index:6;left:4%;bottom:1%;width:146px;height:98px;display:block;background:none;transform:rotate(-8deg);transform-origin:50% 50%;filter:drop-shadow(0 8px 10px #43236c52);animation:ld-guide-ticket-arrive .55s .2s cubic-bezier(.2,.75,.2,1) both}
+.ev-dialog .ev-onboarding-ticket.eh-guide-ticket .ev-reward-art{display:block;width:100%;height:100%;object-fit:contain}
+.ev-onboarding-ticket>span{position:absolute;left:0;right:0;top:31%;display:flex;align-items:center;justify-content:center;gap:5px;color:#503276;font-size:14px;font-weight:650;white-space:nowrap}
+.ev-onboarding-ticket>span b{font-size:20px;font-weight:750;letter-spacing:-.5px}
+.ev-onboarding-ticket>small{position:absolute;left:0;right:0;top:57%;color:#6e4c8e;font-size:11px;line-height:1.4;font-weight:500}
+.ev-dialog .ev-onboarding>.ev-primary{width:100%;min-height:52px;font-size:17px;gap:10px;background:linear-gradient(105deg,#6460ed,#855be6 58%,#b56ed0);box-shadow:inset 0 1px #f4e8ff66,0 8px 25px #9865dd35}
+.ev-dialog .ev-onboarding>.ev-text-button{margin-top:2px;min-height:44px;color:#ccbae7;font-size:13px}
+.ev-onboarding.is-feeding .ev-onboarding-ticket.eh-guide-ticket{animation:ld-guide-ticket-feed .65s cubic-bezier(.4,0,.25,1) both}
+.ev-onboarding.is-feeding .ev-onboarding-scene:before{animation:ld-guide-receive .65s ease-out both}
+/* The first result leads with the little capsule, then two visual earning rules. */
+.ev-onboarding-result .ev-result-heading{padding:1px 0 9px}
+.ev-onboarding-result .ev-result-heading .ev-eyebrow{display:none}
+.ev-onboarding-result .ev-result-heading h2{font-size:21px;margin:1px 0 0}
+.ev-onboarding-result .gc-comfort{margin:0 auto}
+.ev-onboarding-result .gc-caption{color:#e1ccef;font-size:13px}
+.ev-onboarding-result .gc-scene{height:178px}
+.ev-onboarding-result .gc-capsule{top:34px}
+.ev-onboarding-result .gc-shadow{bottom:8px}
+.ev-onboarding-result .gc-character{padding-bottom:2px}
+.ev-onboarding-result .gc-touch-hint{min-height:28px}
+.ev-guide-earn{text-align:center;margin:12px 0 0;padding:13px 0 0;border-top:1px solid #ccb0f626;animation:ld-guide-earn-in .4s 1s ease-out both}
+.ev-guide-earn h3{margin:0;color:#f5e9ff;font-size:16px;font-weight:600;line-height:1.5}
+.ev-guide-rewards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px auto 0;max-width:310px}
+.ev-guide-rewards>div{display:flex;flex-direction:column;align-items:center;min-width:0;position:relative}
+.ev-guide-rewards>div+div:before{content:"";position:absolute;left:-6px;top:16px;bottom:10px;width:1px;background:linear-gradient(transparent,#b994e232,transparent)}
+.ev-guide-rewards .ev-reward-art{width:112px;max-width:100%;height:64px;object-fit:contain;filter:drop-shadow(0 5px 9px #a16be21f)}
+.ev-guide-rewards>div:nth-child(2) .ev-reward-art{filter:drop-shadow(0 5px 9px #c9a16b1f)}
+.ev-guide-rewards span{color:#e6d4fa;font-size:13px;line-height:1.7;white-space:nowrap}
+.ev-guide-rewards span b{font-size:18px;font-weight:650;color:#ecd8ff}
+.ev-guide-rewards>div:nth-child(2) span b{color:#f3d9a8}
+.ev-guide-rewards small{color:#bfb0d6;font-size:11px;line-height:1.5;margin-top:1px}
+.ev-guide-distance{margin:9px 0 0;color:#d9c4ee;font-size:12px;line-height:1.6}
+.ev-guide-distance b{font-size:15px;font-weight:650;color:#f0dfff}
+.ev-onboarding-result .ev-result-actions{gap:0;margin-top:12px}
+.ev-onboarding-result .ev-result-actions>.ev-primary{min-height:50px;font-size:16px}
+.ev-onboarding-result .ev-result-actions>[data-result-later]{grid-column:1/-1;min-height:44px;margin-top:2px}
+.ev-onboarding-result .ev-result-actions>[data-result-prizes]{grid-column:1/-1;min-height:36px}
+@keyframes ld-guide-ticket-arrive{from{opacity:0;transform:translate(-9px,12px) rotate(-14deg) scale(.92)}to{opacity:1;transform:rotate(-8deg)}}
+@keyframes ld-guide-ticket-feed{0%{opacity:1;transform:rotate(-8deg)}24%{opacity:1;transform:translate(4px,-8px) rotate(-2deg) scale(1.04)}80%{opacity:.7;transform:translate(83px,-94px) rotate(12deg) scale(.2)}100%{opacity:0;transform:translate(91px,-101px) rotate(15deg) scale(.04)}}
+@keyframes ld-guide-receive{0%,100%{opacity:.6}60%{opacity:1;transform:scale(1.07)}}
+@keyframes ld-guide-earn-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(max-width:350px){
+ .ev-onboarding-dialog .ev-dialog-head{padding-left:18px}.ev-onboarding-dialog .ev-dialog-head>span{font-size:20px}
+ .ev-onboarding-scene{aspect-ratio:1.14;margin-bottom:10px}.ev-onboarding-machine{inset:0 -4% 0 0;padding-bottom:13px}
+ .ev-dialog .ev-onboarding-ticket.eh-guide-ticket{width:132px;height:92px;left:1%;bottom:1%}.ev-onboarding-ticket>span{font-size:13px}
+ .ev-guide-rewards{gap:8px}.ev-guide-rewards span{font-size:12px}.ev-guide-rewards small{font-size:11px}.ev-guide-earn h3{font-size:15px}
+}
+@media(max-height:700px){
+ .ev-onboarding-scene{max-width:300px;aspect-ratio:1.28}.ev-onboarding-machine .gm-machine{max-width:280px}
+ .ev-onboarding-result .gc-scene{height:178px}.ev-onboarding-result .gc-capsule{top:34px}.ev-onboarding-result .gc-shadow{bottom:6px}
+ .ev-guide-earn{margin-top:8px;padding-top:10px}.ev-guide-rewards{margin-top:3px}.ev-guide-rewards .ev-reward-art{height:56px}.ev-guide-distance{margin-top:5px}
+}
+@media(prefers-reduced-motion:reduce){
+ .ev-onboarding *, .ev-onboarding *:before, .ev-onboarding *:after, .ev-onboarding-result .ev-guide-earn{animation:none!important;transition:none!important}
+ .ev-onboarding.is-feeding .ev-onboarding-ticket.eh-guide-ticket{visibility:hidden}
+}
 .ac-dialog .ac-field input{background:#26215c;border-color:#b493e94d}
 .ac-dialog .ac-address-form .ac-primary{width:100%}
 /* The ranking retains its quiet indigo theme and independent scroll geometry. */

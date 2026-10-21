@@ -38,7 +38,7 @@ test('activity chooser reflects not-started and ended state without hiding histo
 
 test('Double 11 page puts both ticket types, inline machine and complete progress together',()=>{
   const state=withOrders(14),html=expertLotteryMarkup(state,now+100);
-  for(const action of ['choose-activity','pool:ordinary','pool:advanced','draw:1','draw:5','ticket-details','go-expert']){
+  for(const action of ['choose-activity','pool:ordinary','pool:advanced','draw:1','draw:5','ranking','go-expert']){
     assert.ok(button(html,action));
   }
   assert.match(html,/class="gm-machine\b/);
@@ -54,6 +54,17 @@ test('Double 11 page puts both ticket types, inline machine and complete progres
   assert.ok(html.indexOf('class="ev-progress')<html.indexOf('class="et-tickets"'));
   for(const action of ['tickets-unused','tickets-used','tickets-expired'])assert.ok(button(html,action));
   assert.doesNotMatch(html,/每一份认真|都有好运回应|选择一张好运入场券|下一颗惊喜|center-reward-batch|ac-record-group|中奖记录/);
+});
+
+test('Double 11 header promotes a crowned ranking entry and keeps coupon details solely in the inline inventory',()=>{
+  const html=expertLotteryMarkup(withOrders(14),now+100);
+  assert.match(button(html,'ranking'),/class="ac-ranking-entry"/);
+  assert.match(button(html,'ranking'),/aria-label="查看专鉴王者榜"/);
+  assert.match(html,/<span class="ac-ranking-emblem" aria-hidden="true"><svg/);
+  assert.doesNotMatch(html,/data-action="ticket-details"|>明细</);
+  assert.equal((html.match(/class="et-tickets"/g)||[]).length,1);
+  assert.match(html,/我的抽奖券/);
+  for(const action of ['tickets-unused','tickets-used','tickets-expired','earning-history'])assert.ok(button(html,action));
 });
 
 test('Double 11 preserves the selected inline ticket status independently from the selected pool',()=>{

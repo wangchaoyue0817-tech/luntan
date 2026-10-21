@@ -1,7 +1,7 @@
 import {START,active,dayKey,balances,claimDaily,submitOrder,completeOrder,isEligibleCategory} from './expert-event-model.js';
 import {loadEvent,saveEvent,eventNow} from './expert-event-session.js';
 import {machineMarkup,mountMachine,prizeArt} from './capsule-machine.js';
-import {progressMarkup,rewardArt,focusProgress,openActivityHub,openDraw,openProgress,openLeaderboard,openRules,showEventDialog,closeEventDialog,eventCount,icon,escapeHtml as esc} from './expert-event-ui.js';
+import {progressMarkup,rewardArt,firstGuideMarkup,focusProgress,openActivityHub,openDraw,openProgress,openLeaderboard,openRules,showEventDialog,closeEventDialog,eventCount,icon,escapeHtml as esc} from './expert-event-ui.js';
 import {DEMO_SCENE_GROUPS,applyDemoScene} from './expert-event-demo.js';
 
 const $=id=>document.getElementById(id);
@@ -33,8 +33,18 @@ function enterEvent({scroll=false}={}){
  const now=eventNow(),guide=r.state.tickets.find(ticket=>ticket.firstGuide&&ticket.remaining>0&&ticket.at<=now&&ticket.expiresAt>now);
  if(active(now)&&guide&&r.state.guideShownTicketId!==guide.id){
   saveEvent({...r.state,guideShownTicketId:guide.id});
-  const d=showEventDialog('每日赠券',`<div class="eh-guide"><div class="eh-guide-ticket">${rewardArt('ordinary')}</div><h2>免费扭一次</h2><p>赠券今日有效</p><button class="ev-primary" data-guide>免费扭一次 ${icon()}</button><button class="ev-text-button ev-full" data-later>稍后再用</button></div>`);
-  d.querySelector('[data-guide]').onclick=()=>{d.close();openDraw({pool:'ordinary',count:1});};d.querySelector('[data-later]').onclick=()=>d.close();
+  let machine=null,feedTimer=null,feeding=false;
+  const d=showEventDialog('双11专鉴有礼',firstGuideMarkup(),{className:'ev-onboarding-dialog',onClose:()=>{machine?.destroy();clearTimeout(feedTimer);}});
+  machine=mountMachine(d.querySelector('.gm-machine'));
+  d.querySelector('[data-guide]').onclick=()=>{
+   if(feeding)return;feeding=true;
+   d.querySelector('.ev-onboarding').classList.add('is-feeding');
+   d.querySelector('[data-guide]').disabled=true;d.querySelector('[data-later]').disabled=true;
+   d.querySelector('[data-guide]').setAttribute('aria-busy','true');
+   const begin=()=>{if(!d.open)return;d.close('draw');openDraw({pool:'ordinary',count:1});};
+   if(matchMedia('(prefers-reduced-motion:reduce)').matches)begin();else feedTimer=setTimeout(begin,650);
+  };
+  d.querySelector('[data-later]').onclick=()=>d.close('dismiss');
  }
 }
 function eventHomeVisible(){

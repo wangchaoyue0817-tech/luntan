@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createDocument} from './dom-fixture.mjs';
-import {START,END,VOUCHER_END,fresh,submitOrder,claimDaily} from '../public/expert-event-model.js';
+import {START,END,DAY,VOUCHER_END,fresh,submitOrder,claimDaily,draw} from '../public/expert-event-model.js';
 import {loadEvent,saveEvent,setEventClock} from '../public/expert-event-session.js';
 import {
   eventCount,progressGeometry,progressMarkup,focusProgress,resultMarkup,activityHubMarkup,
+  firstGuideMarkup,isFirstGuideBatch,
   rankingState,openActivityHub,openDraw,closeEventDialog,openRules,openProgress,openLeaderboard,showEventDialog
 } from '../public/expert-event-ui.js';
 
@@ -152,6 +153,73 @@ test('five blanks do not become a five-prize celebration',()=>{
   assert.equal(document.querySelector('[data-comfort]').dataset.emptyCount,'5');
   assert.match(document.querySelector('.gc-batch-note').textContent,/5 枚扭蛋均为再接再厉/);
   assert.doesNotMatch(document.querySelector('.ev-result-heading').textContent,/好礼已抵达/);
+});
+
+test('first free ticket explains the activity visually without exposing the forced first result',()=>{
+  const document=view(firstGuideMarkup());
+  assert.equal(document.querySelector('.ev-onboarding-lead').textContent,'免费专鉴，攒券扭好礼');
+  assert(document.querySelector('.ev-onboarding-machine .gm-machine'));
+  assert.equal(document.querySelector('.eh-guide-ticket .ev-reward-art').getAttribute('src'),'assets/gacha/reward-ordinary-v6.png');
+  assert.match(document.querySelector('.eh-guide-ticket').textContent,/今日赠送\s*×1\s*今日有效/);
+  assert.equal(document.querySelector('[data-guide]').textContent.trim(),'免费扭一次');
+  assert.equal(document.querySelector('[data-later]').textContent.trim(),'稍后再用');
+  assert.equal(document.querySelectorAll('.ev-primary').length,1);
+  assert.doesNotMatch(document.root.textContent,/必不中|不中奖|固定未中奖/);
+});
+
+test('first-result guidance follows the consumed guide ticket even after its remaining balance becomes zero',()=>{
+  const state=claimDaily(orders(2),T).state;
+  const consumed=draw(state,{pool:'ordinary',count:1,requestId:'first-guide-binding'},T+20,()=>.4);
+  assert.equal(consumed.state.tickets.find(ticket=>ticket.firstGuide).remaining,0);
+  assert.equal(isFirstGuideBatch(consumed.batch,consumed.state),true);
+  const regular=draw(consumed.state,{pool:'ordinary',count:1,requestId:'earned-ticket'},T+30,()=>.4);
+  assert.equal(isFirstGuideBatch(regular.batch,regular.state),false);
+  assert.equal(isFirstGuideBatch({ticketDebits:[]},state),false);
+  assert.equal(isFirstGuideBatch({ticketDebits:[{ticketId:state.guideTicketId,amount:0}]},state),false);
+});
+
+test('an expired unused guide does not transfer onboarding to the next daily ticket',()=>{
+  const old=claimDaily(fresh(),T).state;
+  const next=claimDaily(old,T+DAY).state;
+  const drawn=draw(next,{pool:'ordinary',count:1,requestId:'next-day-guide-expired'},T+DAY+1,()=>.4);
+  assert.equal(drawn.batch.rewards[0].type,'voucher');
+  assert.equal(isFirstGuideBatch(drawn.batch,drawn.state),false);
+  assert.equal(drawn.state.tickets.find(ticket=>ticket.id===old.guideTicketId).remaining,1);
+});
+
+test('first no-prize result keeps comfort and presents two illustrated earning milestones with one clear expert CTA',()=>{
+  for(const [currentCount,distance] of [[0,'再鉴 2 单，得普通抽奖券'],[9,'再鉴 1 单，得高级抽奖券'],[10,'再鉴 2 单，得普通抽奖券']]) {
+    const document=view(resultMarkup({pool:'ordinary',rewards:[{type:'none'}]},{firstGuide:true,currentCount,canReturn:true}));
+    assert.equal(document.querySelectorAll('[data-comfort]').length,1);
+    assert.match(document.querySelector('[data-comfort-caption]').textContent,/奖品没跟上，抱抱先到/);
+    assert.equal(document.querySelector('.ev-guide-earn h3').textContent,'免费专鉴，继续领抽奖券');
+    const art=document.querySelectorAll('.ev-guide-rewards .ev-reward-art').map(node=>node.getAttribute('src'));
+    assert.deepEqual(art,['assets/gacha/reward-ordinary-v6.png','assets/gacha/reward-advanced-v6.png']);
+    assert.match(document.querySelector('.ev-guide-rewards').textContent,/每\s*2\s*单得普通券/);
+    assert.match(document.querySelector('.ev-guide-rewards').textContent,/每\s*10\s*单得高级券\s*该节点仅发高级券/);
+    assert.equal(document.querySelector('.ev-guide-distance').textContent.replace(/\s+/g,' ').trim(),distance);
+    assert.equal(document.querySelectorAll('.ev-primary').length,1);
+    assert.equal(document.querySelector('[data-result-expert]').textContent.trim(),'去专鉴赢抽奖券');
+    assert.equal(document.querySelector('[data-result-later]').textContent,'稍后再去');
+    assert.equal(document.querySelector('[data-result-again]'),null);
+    assert.equal(document.querySelector('[data-result-prizes]'),null);
+    assert.equal(document.querySelector('[data-result-back]'),null);
+  }
+});
+
+test('a deferred guide included in a winning five-draw keeps all actual rewards and adds the guide without another draw button',()=>{
+  const claimed=claimDaily(orders(8),T).state;
+  const response=draw(claimed,{pool:'ordinary',count:5,requestId:'deferred-guide-five'},T+100,()=>.4);
+  assert.equal(isFirstGuideBatch(response.batch,response.state),true);
+  assert.equal(response.batch.rewards.filter(reward=>reward.type==='none').length,1);
+  const document=view(resultMarkup(response.batch,{firstGuide:true,currentCount:8}));
+  assert.match(document.querySelector('.coupon-value').textContent,/×4/);
+  assert.equal(document.querySelectorAll('.ev-result-card.is-empty').length,1);
+  assert.equal(document.querySelectorAll('.ev-guide-earn').length,1);
+  assert.equal(document.querySelector('[data-result-prizes]').classList.contains('ev-primary'),false);
+  assert.equal(document.querySelector('[data-result-expert]').classList.contains('ev-primary'),true);
+  assert.equal(document.querySelector('[data-result-again]'),null);
+  assert.equal(document.querySelector('[data-comfort]'),null,'winning batches retain their winning result atmosphere');
 });
 
 test('rail geometry uses actual count, including odd counts, and preserves all fifty-order history',()=>{
@@ -421,6 +489,72 @@ test('an explicitly supplied draw generator produces one saved result and skippi
   dialog().querySelector('[data-result-back]').click();
   assert.equal(returns,1);
   assert.equal(dialog(),null);
+});
+
+test('a deferred first guide drawn through the hub opens one result and routes directly to expert selection',t=>{
+  const state=claimDaily(orders(9),T).state;
+  state.guideShownTicketId=state.guideTicketId;
+  const {dialog,window,navigations}=dialogHarness(t,state);
+  let selections=0,changes=0;
+  window.openExpertSelection=()=>{assert.equal(dialog(),null);selections++;};
+  openActivityHub({onChange:()=>changes++});
+  dialog().querySelector('[data-hub-draw="1"]').click();
+  const skip=dialog().querySelector('[data-skip]');
+  skip.click();skip.click();
+  const saved=loadEvent();
+  assert.equal(changes,1);
+  assert.equal(saved.draws.length,1);
+  assert.equal(saved.draws[0].rewards[0].type,'none');
+  assert.equal(saved.tickets.find(ticket=>ticket.firstGuide).remaining,0);
+  assert.equal(dialog().classList.contains('ev-onboarding-result'),true);
+  assert.match(dialog().querySelector('.ev-guide-distance').textContent,/再鉴\s*1\s*单，得高级抽奖券/);
+  assert.equal(dialog().querySelector('[data-result-again]'),null);
+  dialog().querySelector('[data-comfort-hug]').click();
+  assert.deepEqual(loadEvent(),saved);
+  dialog().querySelector('[data-result-expert]').click();
+  assert.equal(selections,1);
+  assert.deepEqual(navigations,[]);
+  assert.equal(dialog(),null,'expert entry must not reopen its originating hub');
+  assert.deepEqual(loadEvent(),saved);
+});
+
+test('post-guide later action closes cleanly, restores the originating hub once, and never debits again',t=>{
+  const state=claimDaily(fresh(),T).state;
+  const {dialog}=dialogHarness(t,state);
+  let changes=0;
+  openActivityHub({onChange:()=>changes++});
+  dialog().querySelector('[data-hub-draw="1"]').click();
+  dialog().querySelector('[data-skip]').click();
+  const saved=loadEvent(),later=dialog().querySelector('[data-result-later]');
+  later.click();later.click();
+  assert.equal(changes,1);
+  assert.equal(dialog().classList.contains('ev-hub-dialog'),true);
+  assert.equal(dialog().querySelector('[data-hub-expert]').textContent.trim(),'去专鉴赢抽奖券');
+  assert.deepEqual(loadEvent(),saved);
+});
+
+test('closing a guide draw before reveal keeps the saved result and does not open another popup',t=>{
+  const {dialog}=dialogHarness(t,claimDaily(fresh(),T).state);
+  t.mock.timers.enable({apis:['setTimeout']});
+  openDraw();
+  const saved=loadEvent();
+  dialog().querySelector('[data-ev-close]').click();
+  t.mock.timers.tick(10000);
+  assert.equal(dialog(),null);
+  assert.equal(saved.draws.length,1);
+  assert.deepEqual(loadEvent(),saved);
+});
+
+test('after an unused guide expires, the new daily draw gets the regular result controls',t=>{
+  const state=claimDaily(claimDaily(fresh(),T).state,T+DAY).state;
+  const {dialog}=dialogHarness(t,state);
+  setEventClock(T+DAY+1000);
+  openDraw({random:()=>.4});
+  dialog().querySelector('[data-skip]').click();
+  assert.equal(dialog().querySelector('.ev-guide-earn'),null);
+  assert.equal(dialog().querySelector('[data-result-later]'),null);
+  assert(dialog().querySelector('[data-result-again]'));
+  assert.equal(dialog().querySelector('[data-result-prizes]').classList.contains('ev-primary'),true);
 });
 
 test('dismissed hub draw returns to its selected pool without drawing again',t=>{

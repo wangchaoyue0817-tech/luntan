@@ -119,10 +119,6 @@ const $ = id => document.getElementById(id);
 const legacyData = () => readLegacy(globalThis.localStorage);
 const legacyNow = () => Math.max(CARD_END,Date.now());
 
-function ticketFilters(inventory) {
-  return `<div class="ac-filter-row" aria-label="抽奖券状态">${[['unused','未使用'],['used','已使用'],['expired','已过期']].map(([key,label]) => `<button aria-pressed="${ticketStatus === key}" data-action="ticket:${key}">${label} ${inventory.counts[key] || 0}</button>`).join('')}<span class="ac-filter-spacer"></span><button data-action="earning-history">获得记录</button></div>`;
-}
-
 export function eventRules(state) {
   return `<div class="ac-rules"><h3>参与规则</h3><ol>
     <li>活动时间为 2026 年 10 月 27 日 00:00 至 11 月 11 日 00:00（北京时间）。11 月 11 日当天已结束。</li>
@@ -209,10 +205,12 @@ function cardPhoto(prize,small=false){
 
 function stopInlineDraw(){machineController?.destroy();machineController=null;drawing=false;}
 function showDrawResult(batch){
- const dialog=ui.showEventDialog('扭蛋结果',ui.resultMarkup(batch),{className:'ev-center-result ev-result-dialog',celebration:batch.rewards.some(r=>r.type==='physical')?'physical':batch.rewards.some(r=>r.type==='voucher')?'voucher':'none'});
- dialog.querySelector('[data-result-prizes]').onclick=()=>{dialog.close('navigate');navigate('prizes');};
+ const state=loadEvent(),firstGuide=ui.isFirstGuideBatch(batch,state);
+ const dialog=ui.showEventDialog(firstGuide?'双11专鉴有礼':'扭蛋结果',ui.resultMarkup(batch,{firstGuide,currentCount:ui.eventCount(state)}),{className:`ev-center-result ev-result-dialog${firstGuide?' ev-onboarding-result':''}`,celebration:batch.rewards.some(r=>r.type==='physical')?'physical':batch.rewards.some(r=>r.type==='voucher')?'voucher':'none'});
+ dialog.querySelector('[data-result-prizes]')?.addEventListener('click',()=>{dialog.close('navigate');navigate('prizes');});
  dialog.querySelector('[data-result-expert]').onclick=()=>{dialog.close('navigate');ui.goExpert();};
- dialog.querySelector('[data-result-again]').onclick=()=>{dialog.close('repeat');startInlineDraw(batch.rewards.length);};
+ dialog.querySelector('[data-result-again]')?.addEventListener('click',()=>{dialog.close('repeat');startInlineDraw(batch.rewards.length);});
+ dialog.querySelector('[data-result-later]')?.addEventListener('click',()=>dialog.close('dismiss'));
 }
 function startInlineDraw(count){
  if(drawing || ![1,5].includes(count))return;
@@ -234,11 +232,6 @@ function showBatch(activity,id){
  if(!batch){toast('未找到对应抽奖记录');return;}
  modal('本次抽奖结果',batchResultMarkup(batch,{legacy,state,now:legacy?legacyNow():eventNow()}));
 }
-function showTicketDetails(){
- const inventory=ticketInventory(loadEvent(),eventNow());
- modal('我的抽奖券',ticketFilters(inventory)+ticketRows(inventory,ticketStatus));
-}
-
 async function handleAction(action) {
   if(action === 'back'){
     if(route==='lottery'&&currentEvent){currentEvent=null;navigate('lottery');}
@@ -251,8 +244,6 @@ async function handleAction(action) {
   if(action.startsWith('pool:')){if(!drawing){selectedPool=action.slice(5);render();}return;}
   if(action === 'skip-draw'){machineController?.skip();return;}
   if(action.startsWith('tickets-')){ticketStatus=action.slice(8);render();return;}
-  if(action.startsWith('ticket:')){ticketStatus=action.slice(7);showTicketDetails();return;}
-  if(action === 'ticket-details'){showTicketDetails();return;}
   if(action === 'go-expert'){window.jianxNavigate?.('expert',{intent:'open-expert'});return;}
   if(action === 'go-card'){window.jianxNavigate?.('card');return;}
   if(action === 'close'){closeModal();return;}

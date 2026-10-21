@@ -17,6 +17,24 @@ export function progressGeometry(count){
   nodeCount:end/2+1,ratio:current/end,steps:Array.from({length:end/2},(_,i)=>(i+1)*2)};
 }
 export const rewardArt=(pool='ordinary',className='')=>`<img class="ev-reward-art ${escapeHtml(className)}" src="assets/gacha/reward-${pool==='advanced'?'advanced':'ordinary'}-v6.png" alt="${pool==='advanced'?'高级香槟色抽奖券':'普通淡紫抽奖券'}" loading="lazy" decoding="async" draggable="false">`;
+export function firstGuideMarkup(){
+ return `<section class="ev-onboarding"><p class="ev-onboarding-lead">免费专鉴，攒券扭好礼</p>
+ <div class="ev-onboarding-scene"><div class="ev-onboarding-machine">${machineMarkup({pool:'ordinary',compact:true})}</div>
+ <div class="ev-onboarding-ticket eh-guide-ticket">${rewardArt('ordinary')}<span>今日赠送 <b>×1</b></span><small>今日有效</small></div></div>
+ <button class="ev-primary" data-guide>免费扭一次 ${icon()}</button><button class="ev-text-button ev-full" data-later>稍后再用</button></section>`;
+}
+// The onboarding follows the consumed ticket, including a deferred draw from the center.
+// It never follows the user's next arbitrary draw after that ticket has expired.
+export function isFirstGuideBatch(batch,state){
+ const guideIds=new Set((state.tickets||[]).filter(ticket=>ticket.firstGuide).map(ticket=>ticket.id));
+ return (batch.ticketDebits||[]).some(debit=>debit.amount>0&&guideIds.has(debit.ticketId));
+}
+export function guideEarnMarkup(currentCount=0){
+ const {current,next}=progressGeometry(currentCount);
+ return `<section class="ev-guide-earn" aria-label="专鉴领抽奖券规则"><h3>免费专鉴，继续领抽奖券</h3>
+ <div class="ev-guide-rewards"><div>${rewardArt('ordinary')}<span>每 <b>2</b> 单得普通券</span></div><div>${rewardArt('advanced')}<span>每 <b>10</b> 单得高级券</span><small>该节点仅发高级券</small></div></div>
+ <p class="ev-guide-distance">再鉴 <b>${next-current}</b> 单，得${next%10===0?'高级':'普通'}抽奖券</p></section>`;
+}
 export function progressMarkup(state,{compact=false}={}){
  const {current:n,end,next,nextHigh,nodeCount,ratio,steps}=progressGeometry(eventCount(state));
  return `<section class="ev-progress ${compact?'is-compact':''}" aria-label="专鉴活动进度" data-current="${n}">
@@ -87,19 +105,21 @@ export function openDraw({pool='ordinary',count=1,onChange,onReturn,random}={}){
  const s=loadEvent(),now=eventNow();
  const response=draw(s,{pool,count,requestId:crypto.randomUUID()},now,random);
  if(response.error){showEventDialog('暂时无法扭蛋',`<div class="ev-empty">${rewardArt(pool)}<h2>${escapeHtml(response.error)}</h2><button class="ev-primary" data-expert>去专鉴 ${icon()}</button></div>`,{onClose:({reason})=>{if(reason==='dismiss')onReturn?.();}}).querySelector('[data-expert]').onclick=()=>{closeEventDialog();goExpert();};return null;}
+ const firstGuide=isFirstGuideBatch(response.batch,response.state);
  saveEvent(response.state);onChange?.(response);let controller=null,done=false,stopCelebration=null,stopComfort=null;
  const d=showEventDialog(pool==='advanced'?'高级扭蛋':'普通扭蛋',`<div class="ev-draw-stage">${machineMarkup({pool,compact:true})}<p>正在开启 ${count} 枚扭蛋</p><button class="ev-text-button" data-skip>跳过动画 ${icon()}</button></div>`,{className:'ev-draw-dialog',onClose:({reason})=>{controller?.destroy();stopCelebration?.();stopComfort?.();if(reason==='dismiss')onReturn?.();}});
- const reveal=()=>{if(done||!d.open)return;done=true;controller?.destroy();d.querySelector('.ev-dialog-body').innerHTML=resultMarkup(response.batch,{canReturn:Boolean(onReturn)});d.classList.add('ev-result-dialog');d.querySelector('.ev-dialog-head>span').textContent='扭蛋结果';stopCelebration=celebrateGacha(d,outcomeTier(response.batch));stopComfort=mountComfort(d);
- d.querySelector('[data-result-prizes]').onclick=()=>{d.close('navigate');window.jianxNavigate('prizes',{event:'expert',pool:response.batch.pool});};
+ const reveal=()=>{if(done||!d.open)return;done=true;controller?.destroy();d.querySelector('.ev-dialog-body').innerHTML=resultMarkup(response.batch,{canReturn:Boolean(onReturn),firstGuide,currentCount:eventCount(response.state)});d.classList.add('ev-result-dialog');if(firstGuide)d.classList.add('ev-onboarding-result');const resultTitle=firstGuide?'双11专鉴有礼':'扭蛋结果';d.querySelector('.ev-dialog-head>span').textContent=resultTitle;d.setAttribute('aria-label',resultTitle);stopCelebration=celebrateGacha(d,outcomeTier(response.batch));stopComfort=mountComfort(d);
+ d.querySelector('[data-result-prizes]')?.addEventListener('click',()=>{d.close('navigate');window.jianxNavigate('prizes',{event:'expert',pool:response.batch.pool});});
  d.querySelector('[data-result-expert]').onclick=()=>{d.close('navigate');goExpert();};
- d.querySelector('[data-result-again]').onclick=()=>{d.close('repeat');openDraw({pool,count,onChange,onReturn});};
+ d.querySelector('[data-result-again]')?.addEventListener('click',()=>{d.close('repeat');openDraw({pool,count,onChange,onReturn});});
+ d.querySelector('[data-result-later]')?.addEventListener('click',()=>d.close('dismiss'));
  d.querySelector('[data-result-back]')?.addEventListener('click',()=>d.close('dismiss'));};
  controller=mountMachine(d.querySelector('.gm-machine')||d.querySelector('.ev-draw-stage'));
  controller.play({count,pool,onReveal:reveal});
  d.querySelector('[data-skip]').onclick=()=>{controller.skip();reveal();};
  return response.batch;
 }
-export function resultMarkup(batch,{canReturn=false}={}){
+export function resultMarkup(batch,{canReturn=false,firstGuide=false,currentCount=0}={}){
  const tier=outcomeTier(batch),won=tier!=='none',many=batch.rewards.length===5;
  const vouchers=batch.rewards.filter(r=>r.type==='voucher');
  const other=batch.rewards.filter(r=>r.type!=='voucher');
@@ -108,7 +128,7 @@ export function resultMarkup(batch,{canReturn=false}={}){
  ${won&&other.length?`<div class="ev-result-grid ${many?'is-five':''}">${other.map(r=>`<article class="ev-result-card ${r.type==='physical'?'is-physical':'is-empty'}">${prizeArt(r.type==='physical'?r.prizeId:'none')}<strong>${escapeHtml(r.type==='physical'?PRIZES.find(p=>p.id===r.prizeId)?.name:'再接再厉')}</strong></article>`).join('')}</div>`:''}
  ${vouchers.length?voucherMarkup(vouchers.length,vouchers[0].expiresAt,{title:'专家线上鉴别券',category:'双11扭蛋 · 专家服务',displayExpiresAt:vouchers[0].expiresAt-1,action:'result-voucher',readOnly:true}):''}
  ${won?'<p class="ev-result-saved">已存入「我的奖品」</p>':''}
- <div class="ev-result-actions"><button class="${won?'ev-primary':'ev-text-button'}" data-result-prizes>查看我的奖品 ${icon()}</button><button class="${won?'ev-text-button':'ev-primary'}" data-result-expert>去专鉴 ${icon()}</button><button class="ev-secondary" data-result-again>再扭${many?'五次':'一次'}</button></div>${canReturn?'<button class="ev-text-button ev-full ev-result-back" data-result-back>返回活动</button>':''}</section>`;
+ ${firstGuide?`${guideEarnMarkup(currentCount)}<div class="ev-result-actions"><button class="ev-primary" data-result-expert>去专鉴赢抽奖券 ${icon()}</button>${won?`<button class="ev-text-button" data-result-prizes>查看我的奖品 ${icon()}</button>`:''}<button class="ev-text-button" data-result-later>稍后再去</button></div>`:`<div class="ev-result-actions"><button class="${won?'ev-primary':'ev-text-button'}" data-result-prizes>查看我的奖品 ${icon()}</button><button class="${won?'ev-text-button':'ev-primary'}" data-result-expert>去专鉴 ${icon()}</button><button class="ev-secondary" data-result-again>再扭${many?'五次':'一次'}</button></div>${canReturn?'<button class="ev-text-button ev-full ev-result-back" data-result-back>返回活动</button>':''}`}</section>`;
 }
 
 export function activityHubMarkup(state,now,{pool='ordinary'}={}){

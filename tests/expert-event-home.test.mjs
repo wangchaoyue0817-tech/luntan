@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 import {createHash,randomUUID} from 'node:crypto';
 import {createDocument,FixtureElement} from './dom-fixture.mjs';
 import * as model from '../public/expert-event-model.js';
-import {progressMarkup,rewardArt,eventCount,icon,escapeHtml} from '../public/expert-event-ui.js';
+import {progressMarkup,rewardArt,firstGuideMarkup,eventCount,icon,escapeHtml} from '../public/expert-event-ui.js';
 import {DEMO_SCENE_GROUPS,buildDemoScene} from '../public/expert-event-demo.js';
 
 const source=readFileSync(new URL('../public/expert-event-home.js',import.meta.url),'utf8');
@@ -62,7 +62,7 @@ if(!FixtureElement.prototype.remove)FixtureElement.prototype.remove=function(){
   this.parentElement=null;
 };
 
-function fixture({initial=model.fresh(),now=T,expertVisible=true}={}) {
+function fixture({initial=model.fresh(),now=T,expertVisible=true,reducedMotion=true}={}) {
   let state=structuredClone(initial),clock=now;
   const events=new Map(),microtasks=[],timers=new Map(),intervals=[],dialogs=[],progress=[];
   const draws=[],hubs=[],rules=[],rankings=[],navigations=[],scenes=[];
@@ -104,7 +104,7 @@ function fixture({initial=model.fresh(),now=T,expertVisible=true}={}) {
       }
       get(name){return this.values.get(name)??null;}
     },
-    crypto:{randomUUID},matchMedia:()=>({matches:true}),
+    crypto:{randomUUID},matchMedia:()=>({matches:reducedMotion}),
     queueMicrotask:fn=>microtasks.push(fn),requestAnimationFrame:fn=>microtasks.push(fn),
     setTimeout:fn=>{const id=++timerId;timers.set(id,fn);return id;},
     clearTimeout:id=>timers.delete(id),setInterval:fn=>{intervals.push(fn);return intervals.length;},
@@ -114,7 +114,7 @@ function fixture({initial=model.fresh(),now=T,expertVisible=true}={}) {
     resetEvent:()=>{state=model.fresh();clock=T;emit('expert-event-change');return structuredClone(state);},
     machineMarkup:()=>'<div class="gm-machine"></div>',mountMachine:()=>({destroy(){}}),
     prizeArt:()=>'<span class="prize-art"></span>',
-    progressMarkup,rewardArt,eventCount,icon,esc:escapeHtml,focusProgress(){},
+    progressMarkup,rewardArt,firstGuideMarkup,eventCount,icon,esc:escapeHtml,focusProgress(){},
     openProgress:options=>progress.push(structuredClone(options)),openLeaderboard:kind=>rankings.push(kind),
     openRules:options=>rules.push(options),openDraw:options=>draws.push(options),
     openActivityHub:options=>hubs.push(options),
@@ -123,7 +123,7 @@ function fixture({initial=model.fresh(),now=T,expertVisible=true}={}) {
       for(const previous of dialogs)previous.open=false;
       const dialog=document.createElement('dialog');dialog.innerHTML=body;dialog.open=true;dialog.title=title;
       dialog.className=options.className||'';
-      dialog.close=()=>{dialog.open=false;};dialogs.push(dialog);return dialog;
+      dialog.close=(reason='dismiss')=>{if(!dialog.open)return;dialog.open=false;dialog.returnValue=reason;options.onClose?.({reason});};dialogs.push(dialog);return dialog;
     }
   });
   vm.runInContext(source.replace(/^import .*;\n/gm,''),context,{filename:'expert-event-home.js'});
@@ -286,7 +286,9 @@ test('a first ticket claimed in the center still gets its guide once on the expe
   const initial=model.claimDaily(model.fresh(),T).state;
   const f=fixture({initial});f.enter();
   assert.equal(f.dialogs.length,1);
-  assert.equal(f.dialogs[0].title,'每日赠券');
+  assert.equal(f.dialogs[0].title,'双11专鉴有礼');
+  assert.equal(f.dialogs[0].className,'ev-onboarding-dialog');
+  assert.equal(f.dialogs[0].querySelector('.ev-onboarding-lead').textContent,'免费专鉴，攒券扭好礼');
   const ticketArt=f.dialogs[0].querySelector('.eh-guide-ticket .ev-reward-art');
   assert(ticketArt,'the first free ticket uses the same lottery-ticket artwork as the pool and milestones');
   assert.equal(ticketArt.getAttribute('src'),'assets/gacha/reward-ordinary-v6.png');
@@ -297,6 +299,51 @@ test('a first ticket claimed in the center still gets its guide once on the expe
   assert.equal(f.dialogs.length,1);
   const reloaded=fixture({initial:f.state});reloaded.enter();
   assert.equal(reloaded.dialogs.length,0,'shown guide survives module reload');
+});
+
+test('postponing the first guide keeps the free ticket and the activity entry available',()=>{
+  const f=fixture();f.enter();
+  const saved=f.state;
+  f.dialogs[0].querySelector('[data-later]').click();
+  assert.equal(f.dialogs[0].open,false);
+  assert.deepEqual(f.state,saved);
+  assert.equal(f.draws.length,0);
+  assert.equal(model.balances(f.state,T).daily,1);
+  f.enter();
+  assert.equal(f.dialogs.length,1,'postponement does not repeatedly interrupt activity entry');
+  f.document.querySelector('[data-eh="hub"]').click();
+  assert.equal(f.hubs.length,1);
+  assert.equal(f.state.tickets.find(ticket=>ticket.firstGuide).remaining,1);
+});
+
+test('first guide draw disables repeated activation and starts exactly one ordinary draw',()=>{
+  const f=fixture();f.enter();
+  const guide=f.dialogs[0],action=guide.querySelector('[data-guide]');
+  action.click();action.click();
+  assert.equal(action.disabled,true);
+  assert.equal(action.getAttribute('aria-busy'),'true');
+  assert.equal(guide.querySelector('[data-later]').disabled,true);
+  assert.equal(guide.querySelector('.ev-onboarding').classList.contains('is-feeding'),true);
+  assert.equal(guide.open,false);
+  assert.equal(guide.returnValue,'draw');
+  assert.equal(f.draws.length,1);
+  assert.equal(f.draws[0].pool,'ordinary');
+  assert.equal(f.draws[0].count,1);
+});
+
+test('the animated ticket feed waits before drawing and cancelling it never consumes the ticket',()=>{
+  for(const cancel of [false,true]) {
+    const f=fixture({reducedMotion:false});f.enter();
+    const guide=f.dialogs[0],saved=f.state;
+    guide.querySelector('[data-guide]').click();
+    assert.equal(f.draws.length,0,'wait for the visual ticket feed before starting the draw');
+    assert.equal(guide.open,true);
+    if(cancel)guide.close('dismiss');
+    f.finishAI();
+    assert.equal(f.draws.length,cancel?0:1);
+    assert.equal(guide.open,false);
+    assert.deepEqual(f.state,saved,'onboarding animation itself must never debit a ticket');
+  }
 });
 
 test('used or expired first guide tickets never cause another guide',()=>{
@@ -535,7 +582,7 @@ test('progress scene triggers reward feedback and replay restores the same earne
   assert.equal(eventCount(f.state),0);
   assert.deepEqual(model.balances(f.state,T),{ordinary:1,advanced:0,daily:1});
   assert.equal(f.scenes.at(-1).id,'first');
-  assert.equal(f.dialogs.at(-1).title,'每日赠券');
+  assert.equal(f.dialogs.at(-1).title,'双11专鉴有礼');
 });
 
 test('draw setup passes targeted five-draw parameters and an isolated random callback to shared draw UI',()=>{
