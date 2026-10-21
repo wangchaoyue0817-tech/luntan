@@ -87,6 +87,35 @@ async function harness(t,state=orders(50)) {
   };
 }
 
+test('double-11 prize rules omit every stock quantity while preserving prizes and probabilities',async t=>{
+  const h=await harness(t),before=h.snapshot();
+  h.click('[data-action="expert-rules"]');
+  const dialog=h.document.querySelector('#ac-dialog');
+  assert.equal(dialog.open,true);
+  const products=dialog.querySelectorAll('.ac-product');
+  assert.equal(products.length,7);
+  for(const product of products)assert.doesNotMatch(product.textContent,/活动限量|\d+\s*份/);
+  for(const product of dialog.querySelectorAll('.ac-product[data-pool="advanced"]'))assert.equal(product.querySelector('small'),null);
+  assert.match(dialog.textContent,/YSL气垫/);
+  assert.match(dialog.textContent,/COACH腰带/);
+  assert.match(dialog.textContent,/雷蛇耳机/);
+  assert.match(dialog.textContent,/COACH钱包/);
+  assert.equal(dialog.querySelectorAll('.ac-probabilities').length,2);
+  for(const probability of ['5%','75%','20%','8%','72%'])assert.ok(dialog.textContent.includes(probability));
+  assert.deepEqual(h.snapshot(),before,'opening prize rules must not mutate stock or draw state');
+});
+
+test('sold-out prize keeps its availability status without showing a quantity',async t=>{
+  const initial=orders(0);initial.stocks['ysl-cushion']=0;
+  const h=await harness(t,initial),before=h.snapshot();
+  h.click('[data-action="expert-rules"]');
+  const products=h.document.querySelectorAll('.ac-product');
+  const soldOut=products.find(product=>product.textContent.includes('YSL气垫'));
+  assert.equal(soldOut.querySelector('small').textContent,'已抽完');
+  for(const product of products)assert.doesNotMatch(product.textContent,/活动限量|\d+\s*份/);
+  assert.deepEqual(h.snapshot(),before);
+});
+
 test('inline five-draw persists once, locks controls, and skips without re-debiting',async t=>{
   const h=await harness(t),before=h.balance(),machine=h.document.querySelector('.gm-machine');
   const draw=h.document.querySelector('[data-action="draw:5"]');
