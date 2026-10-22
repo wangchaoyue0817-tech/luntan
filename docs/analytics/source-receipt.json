@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "items": [{
+    "id": "double11-tracking-plan",
+    "title": "双11新增功能埋点方案",
+    "queries": [{
+      "id": "requirements-and-clarifications",
+      "source": {
+        "label": "双11活动需求文档与本轮确认",
+        "links": [{"label": "双11活动需求文档", "href": "https://ke6wxkaquf.feishu.cn/wiki/LOkTwHTYnijQNgkQ7OicIK32n4c"}],
+        "caveats": ["活动品类按8类预留并以实际上线配置统计；风控关闭弹窗不停止累计、发券和抽奖。", "用户最新确认普通池实物5%、高级池实物8%；Demo旧配置尚未同步。"]
+      },
+      "summary": "覆盖入口、专鉴订单、发券、抽奖、奖品、榜单及风险控制，分别定义行为与业务成功。"
+    }, {
+      "id": "demo-source",
+      "source": {
+        "label": "Demo页面与本地源代码",
+        "links": [{"label": "当前Demo", "href": "https://jianx-expert-gacha-1111.yanlei-code.chatgpt.site/"}],
+        "files": [{"label": "expert-event-model.js"}, {"label": "expert-event-ui.js"}, {"label": "activity-center.js"}, {"label": "center-prizes.js"}],
+        "caveats": ["本次交付为埋点设计，未接入生产SDK、真实业务服务或数据平台。"],
+        "evidenceFlow": [{"kind": "validation", "title": "实现边界", "detail": "代码基线63f893a1de72f26ec64595432acb63e3dfaffdd9中的订单、抽奖与榜单为本地模拟；鉴别券点击去使用不等于核销成功。"}]
+      }
+    }]
+  }]
+}
