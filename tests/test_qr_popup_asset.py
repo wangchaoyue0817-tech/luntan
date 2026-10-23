@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image, ImageStat
 
 
-ASSET = Path(__file__).resolve().parents[1] / 'public/assets/gacha/xiaotu-qr-marketing-popup-v4.png'
+ASSET = Path(__file__).resolve().parents[1] / 'public/assets/gacha/xiaotu-qr-marketing-popup-v5.png'
 
 
 class QrPopupAssetTests(unittest.TestCase):
