@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image, ImageStat
 
 
-ASSET = Path(__file__).resolve().parents[1] / 'public/assets/gacha/xiaotu-qr-marketing-popup-v5.png'
+ASSET = Path(__file__).resolve().parents[1] / 'public/assets/gacha/xiaotu-qr-marketing-popup-v6.png'
 
 
 class QrPopupAssetTests(unittest.TestCase):
@@ -13,7 +13,7 @@ class QrPopupAssetTests(unittest.TestCase):
             image.verify()
         with Image.open(ASSET) as image:
             self.assertEqual(image.format, 'PNG')
-            self.assertEqual(image.size, (1086, 1448))
+            self.assertEqual(image.size, (1254, 1254))
             self.assertGreater(max(ImageStat.Stat(image.convert('RGB')).stddev), 20)
 
     def test_transparent_outside_and_solid_qr_placeholder(self):
@@ -22,7 +22,19 @@ class QrPopupAssetTests(unittest.TestCase):
             alpha = image.getchannel('A')
             self.assertGreater(alpha.histogram()[0] / (image.width * image.height), .1)
             # The replaceable square must not have a transparency hole.
-            self.assertGreaterEqual(alpha.crop((314, 666, 814, 1172)).getextrema()[0], 250)
+            self.assertGreaterEqual(alpha.crop((401, 564, 840, 1003)).getextrema()[0], 250)
+
+    def test_visible_artwork_has_safe_margins_on_every_edge(self):
+        with Image.open(ASSET) as image:
+            alpha = image.getchannel('A')
+            # Ignore faint glow, but every substantial contour must be inside.
+            bounds = alpha.point(lambda value: 255 if value > 128 else 0).getbbox()
+            self.assertIsNotNone(bounds)
+            left, top, right, bottom = bounds
+            self.assertGreaterEqual(left, image.width * .025)
+            self.assertGreaterEqual(image.width - right, image.width * .025)
+            self.assertGreaterEqual(top, image.height * .025)
+            self.assertGreaterEqual(image.height - bottom, image.height * .025)
 
     def test_primary_color_has_visible_but_limited_secondary_accents(self):
         with Image.open(ASSET) as image:
