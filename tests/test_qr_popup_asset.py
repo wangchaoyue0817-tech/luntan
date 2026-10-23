@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image, ImageStat
 
 
-ASSET = Path(__file__).resolve().parents[1] / 'public/assets/gacha/xiaotu-qr-marketing-popup-v3.png'
+ASSET = Path(__file__).resolve().parents[1] / 'public/assets/gacha/xiaotu-qr-marketing-popup-v4.png'
 
 
 class QrPopupAssetTests(unittest.TestCase):
@@ -33,12 +33,15 @@ class QrPopupAssetTests(unittest.TestCase):
             cool = sum(b > r + 15 and b > g + 10 for r, g, b, _ in colored)
             mint = sum(g > r + 15 and b > r + 15 and abs(g - b) < 45
                        for r, g, b, _ in colored)
+            lavender = sum(b > g + 15 and r > g + 5 and abs(b - r) < 75
+                           for r, g, b, _ in colored)
             warm = sum(r > b + 15 and g > b + 10 for r, g, b, _ in colored)
-            # Blue-violet dominates, but the popup must not regress to monochrome.
+            # Keep blue-violet dominant with lavender and limited gold accents.
             self.assertGreater(cool / len(colored), .65)
-            self.assertGreater(mint / len(colored), .015)
+            self.assertLess(mint / len(colored), .01)
+            self.assertGreater(lavender / len(colored), .02)
             self.assertGreater(warm / len(colored), .015)
-            self.assertLess((mint + warm) / len(colored), .3)
+            self.assertLess(warm / len(colored), .15)
 
 
 if __name__ == '__main__':
