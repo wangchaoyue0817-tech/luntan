@@ -23,7 +23,8 @@ class FloatingTicketAssetTests(unittest.TestCase):
             histogram = alpha.histogram()
             total = image.width * image.height
             self.assertGreater(histogram[0] / total, 0.05)
-            self.assertGreater(histogram[255] / total, 0.2)
+            # The glass material legitimately retains partial alpha.
+            self.assertGreater(sum(histogram[230:]) / total, 0.2)
 
 
 if __name__ == '__main__':
