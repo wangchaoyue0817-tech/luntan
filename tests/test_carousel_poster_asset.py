@@ -6,13 +6,14 @@ from PIL import Image, ImageStat
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'public/assets/gacha'
+CURRENT_POSTER = 'home-carousel-double11-v2'
 
 
 class CarouselPosterAssetTests(unittest.TestCase):
     def test_exports_match_requested_design_dimensions(self):
         for scale in (1, 2, 3):
             with self.subTest(scale=scale):
-                path = ASSETS / f'home-carousel-double11-v1@{scale}x.png'
+                path = ASSETS / f'{CURRENT_POSTER}@{scale}x.png'
                 with Image.open(path) as image:
                     image.verify()
                 with Image.open(path) as image:
@@ -24,7 +25,7 @@ class CarouselPosterAssetTests(unittest.TestCase):
     def test_corners_are_transparent_with_26_unit_rounding(self):
         for scale in (1, 2, 3):
             with self.subTest(scale=scale):
-                with Image.open(ASSETS / f'home-carousel-double11-v1@{scale}x.png') as image:
+                with Image.open(ASSETS / f'{CURRENT_POSTER}@{scale}x.png') as image:
                     alpha = image.getchannel('A')
                     w, h = image.size
                     for x, y in [(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)]:
