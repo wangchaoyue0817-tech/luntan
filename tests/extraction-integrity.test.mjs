@@ -97,3 +97,18 @@ test('navigation exposes home, expert, card and the shared activity destinations
     }
   }
 });
+
+test('source delivery guide only links files shipped inside this standalone project', async () => {
+  const project = fileURLToPath(new URL('../', import.meta.url));
+  const guide = await readFile(path.join(project, '最新源码交付说明.md'), 'utf8');
+  const links = [...guide.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)].map(match => match[1]);
+  assert.ok(links.length > 0, 'The delivery guide must link the actual source files');
+  for (const link of links) {
+    assert.ok(!path.isAbsolute(link) && !link.split('/').includes('..'), `External delivery dependency: ${link}`);
+    assert.ok((await stat(path.join(project, link))).isFile(), `Missing delivery file: ${link}`);
+  }
+  const scripts = JSON.parse(await readFile(path.join(project, 'package.json'), 'utf8')).scripts;
+  assert.match(scripts.dev, /node scripts\/serve\.mjs/);
+  assert.ok(guide.includes('node scripts/serve.mjs --host 127.0.0.1 --port 4181'));
+  assert.ok(guide.includes('node build.mjs'));
+});
