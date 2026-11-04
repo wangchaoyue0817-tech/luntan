@@ -5,27 +5,31 @@ const esc = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<'
 const boardAlias = {home:'featured', featured:'featured', antiques:'antiques', health:'health', goods:'goods'};
 const filterChannel = {all:'全部', fresh:'圈内新鲜事', craft:'懂点门道', review:'大家评', chat:'一起聊'};
 const posts = [
-  {id:'bowl', board:'antiques', channel:'大家评', author:'听雨', avatar:'is-gold', topic:'瓷器 · 大家评', title:'这只青花碗，底足怎么看？', images:['assets/forum/bowl.jpg','assets/forum/bowl.jpg','assets/forum/bowl.jpg'], verdict:null, likes:28, liked:false, at:40, rank:1, comments:[
+  {id:'bowl', board:'antiques', channel:'大家评', author:'听雨', avatar:'is-gold', topic:'瓷器 · 大家评', title:'这只青花碗，底足怎么看？', images:['assets/forum/bowl.jpg','assets/forum/bowl.jpg','assets/forum/bowl.jpg'], ratio:'tall', verdict:null, likes:28, liked:false, at:40, rank:1, comments:[
     {author:'老周', text:'先看圈足是否沾砂，再对一下修足的刀痕是否顺。'},
     {author:'阿宁', text:'青花发色偏灰，建议补一张足墙内侧。'},
     {author:'小满', text:'我倾向再看釉面缩釉，单看底足还不够。'}
   ]},
-  {id:'coin', board:'antiques', channel:'懂点门道', author:'老周', avatar:'is-cyan', topic:'钱币 · 懂点门道', title:'包浆怎么看？先看这三个细节', images:['assets/forum/coin.svg','assets/forum/coin-detail.svg'], likes:16, liked:false, at:30, rank:2, comments:[
+  {id:'coin', board:'antiques', channel:'懂点门道', author:'老周', avatar:'is-cyan', topic:'钱币 · 懂点门道', title:'包浆怎么看？先看这三个细节', images:['assets/forum/coin.svg','assets/forum/coin-detail.svg'], ratio:'short', likes:16, liked:false, at:30, rank:2, comments:[
     {author:'听雨', text:'高点亮、低点暗，才像长期盘玩出来的。'},
     {author:'陈叔', text:'方孔内壁如果发贼光，要小心后做。'}
   ]},
   {id:'expo', board:'antiques', channel:'圈内新鲜事', author:'圈内新鲜事', avatar:'is-violet', topic:'', title:'周末收藏展，有哪些值得看？', source:'展会公告', images:[], likes:9, liked:false, at:20, rank:3, comments:[
     {author:'老周', text:'周六上午瓷器专场人少一些。'}
   ]},
-  {id:'photo', board:'antiques', channel:'一起聊', author:'小林', avatar:'is-cyan', topic:'一起聊', title:'第一次上手，底足这样拍清楚吗？', images:['assets/forum/bowl-foot.svg'], likes:4, liked:false, at:50, rank:4, comments:[]},
+  {id:'photo', board:'antiques', channel:'一起聊', author:'小林', avatar:'is-cyan', topic:'一起聊', title:'第一次上手，底足这样拍清楚吗？', images:['assets/forum/bowl-foot.svg'], ratio:'mid', likes:4, liked:false, at:50, rank:4, comments:[]},
   {id:'run', board:'health', channel:'一起聊', author:'阿麦', avatar:'is-cyan', topic:'打卡', title:'晨跑 5 公里，配速怎么才不算硬撑？', images:[], likes:11, liked:false, at:18, rank:2, comments:[
     {author:'小林', text:'能说话的配速，比盯着表更稳。'}
   ]},
   {id:'meal', board:'health', channel:'懂点门道', author:'南风', avatar:'is-cyan', topic:'饮食', title:'减脂期晚餐，一盘怎么搭配？', images:[], likes:7, liked:false, at:12, rank:3, comments:[]},
-  {id:'cushion', board:'goods', channel:'大家评', author:'米果', avatar:'is-violet', topic:'美妆 · 大家评', title:'同价位气垫，哪款更抗造？', images:[], likes:21, liked:false, at:22, rank:1, comments:[
+  {id:'cushion', board:'goods', channel:'大家评', author:'米果', avatar:'is-violet', topic:'美妆 · 大家评', title:'同价位气垫，哪款更抗造？', images:['assets/forum/cream.jpg'], ratio:'tall', likes:21, liked:false, at:22, rank:1, comments:[
     {author:'阿麦', text:'看持妆可以先比下午三点的鼻翼。'}
   ]},
-  {id:'bag', board:'goods', channel:'懂点门道', author:'周周', avatar:'is-gold', topic:'包袋 · 懂点门道', title:'这只包的五金，怎么判断翻新？', images:[], likes:13, liked:false, at:16, rank:2, comments:[]}
+  {id:'bag', board:'goods', channel:'懂点门道', author:'周周', avatar:'is-gold', topic:'包袋 · 懂点门道', title:'这只包的五金，怎么判断翻新？', images:['assets/forum/bags.jpg'], ratio:'mid', likes:13, liked:false, at:16, rank:2, comments:[]},
+  {id:'toy', board:'goods', channel:'一起聊', author:'北岛', avatar:'is-cyan', topic:'潮玩 · 一起聊', title:'这只潮玩，开箱先看哪一处？', images:['assets/forum/toy.jpg'], ratio:'short', likes:18, liked:false, at:28, rank:3, comments:[
+    {author:'米果', text:'先看接缝和漆面，再对编号。'}
+  ]},
+  {id:'watch', board:'goods', channel:'懂点门道', author:'阿宁', avatar:'is-gold', topic:'腕表 · 懂点门道', title:'表带接口，怎么判断后换？', images:['assets/forum/watch.jpg'], ratio:'tall', likes:15, liked:false, at:14, rank:4, comments:[]}
 ];
 const forumState = {board:'antiques', filter:'all', sort:'hot', query:'', postId:null, returnFocus:null};
 function ensureScreen(){
@@ -62,9 +66,27 @@ function verdict(post){
   const button = (value, label) => `<button type="button" data-vote="${value}" aria-pressed="${post.verdict === value}">${label}</button>`;
   return `<div class="forum-verdict"><p>网友判断</p><div class="forum-verdict-row">${button('real','真')}${button('fake','假')}${button('unsure','看不准')}</div></div>`;
 }
+function usesWaterfall(){return forumState.board === 'featured' || forumState.board === 'goods';}
+function actions(post){return `<div class="forum-actions"><button type="button" class="forum-like" data-like="${post.id}" aria-pressed="${post.liked}" aria-label="${post.liked ? '取消赞' : '点赞'}">${thumb(post.liked)}<span>${post.likes}</span></button><button type="button" class="forum-comment" data-comment="${post.id}" aria-label="评论">${bubble()}<span>${post.comments.length}</span></button></div>`;}
+function stackCard(post){return `<article class="forum-post" data-post="${post.id}"><header class="forum-post-head"><i class="forum-avatar ${post.avatar}" aria-hidden="true"></i><div class="forum-post-id"><strong>${esc(post.author)}</strong>${post.topic ? `<span>${esc(post.topic)}</span>` : ''}</div></header><h3 class="forum-title">${esc(post.title)}</h3>${shots(post)}${post.source ? `<p class="forum-source">来源：${esc(post.source)}</p>` : ''}${verdict(post)}${actions(post)}</article>`;}
+function coverRatio(post){return post.ratio || (post.images.length >= 3 ? 'tall' : post.images.length > 1 ? 'mid' : post.images.length ? 'short' : '');}
+function tileWeight(post){const ratio = coverRatio(post); const image = ratio === 'tall' ? 210 : ratio === 'mid' ? 168 : ratio === 'short' ? 132 : 0; return image + Math.ceil(post.title.length / 8) * 20 + 48;}
+function tileCard(post){const ratio = coverRatio(post); const cover = post.images[0] ? `<img class="forum-cover is-${ratio}" src="${post.images[0]}" alt="">` : ''; return `<article class="forum-tile" data-post="${post.id}">${cover}<h3 class="forum-title">${esc(post.title)}</h3><div class="forum-tile-foot"><span class="forum-tile-author"><i class="forum-avatar ${post.avatar}" aria-hidden="true"></i><em>${esc(post.author)}</em></span>${actions(post)}</div></article>`;}
+function masonry(list){
+  const columns = [[], []];
+  const heights = [0, 0];
+  list.forEach(post => {
+    const index = heights[0] <= heights[1] ? 0 : 1;
+    columns[index].push(post);
+    heights[index] += tileWeight(post);
+  });
+  return `<div class="forum-masonry">${columns.map(column => `<div class="forum-col">${column.map(tileCard).join('')}</div>`).join('')}</div>`;
+}
 function renderFeed(){
   const list = visiblePosts();
-  byId('forumFeed').innerHTML = list.length ? list.map(post => `<article class="forum-post" data-post="${post.id}"><header class="forum-post-head"><i class="forum-avatar ${post.avatar}" aria-hidden="true"></i><div class="forum-post-id"><strong>${esc(post.author)}</strong>${post.topic ? `<span>${esc(post.topic)}</span>` : ''}</div></header><h3 class="forum-title">${esc(post.title)}</h3>${shots(post)}${post.source ? `<p class="forum-source">来源：${esc(post.source)}</p>` : ''}${verdict(post)}<div class="forum-actions"><button type="button" class="forum-like" data-like="${post.id}" aria-pressed="${post.liked}" aria-label="${post.liked ? '取消赞' : '点赞'}">${thumb(post.liked)}<span>${post.likes}</span></button><button type="button" class="forum-comment" data-comment="${post.id}" aria-label="评论">${bubble()}<span>${post.comments.length}</span></button></div></article>`).join('') : '<p class="forum-empty">还没有相关帖子</p>';
+  const feed = byId('forumFeed');
+  feed.classList.toggle('is-waterfall', usesWaterfall());
+  feed.innerHTML = list.length ? (usesWaterfall() ? masonry(list) : list.map(stackCard).join('')) : '<p class="forum-empty">还没有相关帖子</p>';
 }
 function renderChrome(){
   document.querySelectorAll('#forumView [data-board]').forEach(button => button.setAttribute('aria-selected', String(button.dataset.board === forumState.board)));

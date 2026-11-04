@@ -113,6 +113,38 @@ test('antiques likes, comments, votes and topic filters stay in sync',()=>{
   assert.equal(view.querySelector('[data-comment="bowl"] span').textContent,'4');
 });
 
+test('featured and goods use a two-column waterfall while health stays a single column',()=>{
+  const f=fixture();
+  f.document.querySelector('[data-forum="goods"]').click();
+  const view=f.document.getElementById('forumView');
+  assert.equal(view.querySelector('[data-board="goods"]').getAttribute('aria-selected'),'true');
+  assert.equal(view.querySelectorAll('.forum-masonry').length,1);
+  assert.equal(view.querySelectorAll('.forum-col').length,2);
+  assert.equal(view.querySelector('.forum-post'),null);
+  assert.ok(view.querySelector('.forum-cover'));
+  assert.doesNotMatch(view.querySelector('.forum-board-track').textContent,/玉石文玩|邮票|杂项/);
+  view.querySelector('[data-like="cushion"]').click();
+  assert.equal(view.querySelector('[data-like="cushion"] span').textContent,'22');
+  view.querySelector('[data-comment="cushion"]').click();
+  const input=f.document.getElementById('forumCommentInput');
+  input.value='下午三点的鼻翼更说明持妆';
+  input.dispatchEvent({type:'input'});
+  f.document.getElementById('forumCommentSend').click();
+  assert.equal(view.querySelector('[data-comment="cushion"] span').textContent,'2');
+  view.querySelector('[data-board="featured"]').click();
+  assert.equal(view.querySelector('[data-board="featured"]').getAttribute('aria-selected'),'true');
+  assert.equal(view.querySelectorAll('.forum-col').length,2);
+  assert.match(view.textContent,/青花碗/);
+  assert.match(view.textContent,/气垫/);
+  view.querySelector('[data-board="health"]').click();
+  assert.equal(view.querySelector('.forum-masonry'),null);
+  assert.ok(view.querySelector('.forum-post'));
+  assert.match(view.textContent,/晨跑 5 公里/);
+  view.querySelector('[data-board="antiques"]').click();
+  assert.equal(view.querySelector('.forum-masonry'),null);
+  assert.ok(view.querySelector('.forum-mosaic'));
+});
+
 test('an empty forum filter explains that nothing matches',()=>{
   const f=fixture();
   f.document.querySelector('[data-forum="health"]').click();
