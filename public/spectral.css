@@ -65,7 +65,7 @@
 #aiHome .banner-dots button:after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:5px;background:#8370d294;transform:translate(-50%,-50%);transition:width .4s,background .4s}
 #aiHome .banner-dots button.active:after{width:13px;background:#c9b5ff;box-shadow:0 0 7px #bb8dff85}
 #aiHome .forum-entry{margin:12px 18px 0}
-#aiHome .forum-card{height:107px;border-radius:13px}
+#aiHome .forum-card{border-radius:16px}
 #aiHome .suggestion-ticker{margin-top:18px}
 #aiHome .suggestion-ticker-inner{gap:4px}
 #aiHome .suggestion-row{height:24px}
