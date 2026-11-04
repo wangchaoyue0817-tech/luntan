@@ -70,39 +70,43 @@ test('forum entry sits below the banner with three resident boards',()=>{
   assert.equal(f.document.querySelectorAll('[data-forum]').length,4);
 });
 
-test('forum tiles open the selected board as a two-column waterfall',()=>{
+test('forum tiles open the antiques feed without the category chip row',()=>{
   const f=fixture();
   assert.match(f.document.getElementById('forumHotTopic').textContent,/热议：/);
-  f.document.querySelector('[data-forum="home"]').click();
+  f.document.querySelector('[data-forum="antiques"]').click();
   const view=f.document.getElementById('forumView');
   assert.equal(view.hidden,false);
-  assert.equal(view.querySelector('[data-board="featured"]').getAttribute('aria-selected'),'true');
-  const columns=view.querySelectorAll('.forum-col');
-  assert.equal(columns.length,2);
-  assert.ok([...columns].every(column=>column.querySelector('.forum-card')));
-  const ratios=[...view.querySelectorAll('.forum-card')].map(card=>card.getAttribute('style'));
-  assert.ok(new Set(ratios).size>=4);
-  assert.equal(view.querySelector('.forum-badge'),null);
-  f.document.querySelector('[data-forum="antiques"]').click();
+  assert.equal(view.querySelector('h1').textContent,'论坛');
   assert.equal(view.querySelector('[data-board="antiques"]').getAttribute('aria-selected'),'true');
-  assert.ok([...view.querySelectorAll('.forum-source')].every(node=>node.textContent.startsWith('古玩雅集')));
-  assert.deepEqual(f.forumOpens.map(item=>item.board),['home','antiques']);
+  assert.deepEqual([...view.querySelectorAll('.forum-filters button')].map(button=>button.textContent),['全部','圈内新鲜事','懂点门道','大家评','一起聊']);
+  assert.doesNotMatch(view.querySelector('.forum-board-track').textContent,/玉石文玩|邮票|杂项/);
+  assert.equal(view.querySelector('.forum-masonry'),null);
+  assert.match(view.textContent,/这只青花碗，底足怎么看？/);
+  assert.ok(view.querySelector('.forum-mosaic'));
+  assert.match(view.textContent,/网友判断/);
   f.document.getElementById('forumBack').click();
   assert.equal(view.hidden,true);
 });
 
-test('review filter, poll and like stay on the waterfall card',()=>{
+test('antiques likes, comments, votes and topic filters stay in sync',()=>{
   const f=fixture();
-  f.document.querySelector('[data-forum="home"]').click();
+  f.document.querySelector('[data-forum="antiques"]').click();
   const view=f.document.getElementById('forumView');
   view.querySelector('[data-filter="review"]').click();
-  assert.ok([...view.querySelectorAll('.forum-source')].every(node=>node.textContent.includes('大家评')));
-  const vote=view.querySelector('[data-vote]');
-  vote.click();
-  assert.equal(view.querySelector(`[data-vote="${vote.dataset.vote}"]`).getAttribute('aria-pressed'),'true');
-  const like=view.querySelector('[data-like]');
-  like.click();
-  assert.equal(view.querySelector(`[data-like="${like.dataset.like}"]`).getAttribute('aria-pressed'),'true');
+  assert.match(view.querySelector('.forum-title').textContent,/青花碗/);
+  assert.equal(view.querySelectorAll('.forum-post').length,1);
+  view.querySelector('[data-vote="real"]').click();
+  assert.equal(view.querySelector('[data-vote="real"]').getAttribute('aria-pressed'),'true');
+  assert.equal(view.querySelector('[data-vote="fake"]').getAttribute('aria-pressed'),'false');
+  view.querySelector('[data-like="bowl"]').click();
+  assert.equal(view.querySelector('[data-like="bowl"] span').textContent,'29');
+  view.querySelector('[data-comment="bowl"]').click();
+  const input=f.document.getElementById('forumCommentInput');
+  input.value='底足火石红比较自然';
+  input.dispatchEvent({type:'input'});
+  f.document.getElementById('forumCommentSend').click();
+  assert.match(f.document.getElementById('forumCommentList').textContent,/底足火石红比较自然/);
+  assert.equal(view.querySelector('[data-comment="bowl"] span').textContent,'4');
 });
 
 test('an empty forum filter explains that nothing matches',()=>{
