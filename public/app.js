@@ -160,6 +160,32 @@ $('skillCarousel').addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key=
 bindSkillSwipe($('skillCarousel'));bindSwipe($('bannerViewport'),dir=>setBanner(state.banner+dir,true));
 $('bannerDots').onclick=e=>{const b=e.target.closest('[data-page]');if(b)setBanner(Number(b.dataset.page),true);};
 $('bannerTrack').onclick=e=>{const b=e.target.closest('[data-banner]');if(!b)return;const n=Number(b.dataset.banner);if(n===0)openPopup();else if(n===1)setTab('expert');else selectSkill('估价格');};
+const forumBoards={home:'鉴X社区',antiques:'古玩雅集',health:'健康生活家',goods:'好物研究所'};
+const forumTopics=[
+  '热议：这枚翡翠到底能不能买？',
+  '热议：连续打卡 21 天，身体有变化吗？',
+  '热议：同价位气垫，哪款更抗造？',
+  '热议：老家这件瓷器值不值得送鉴？',
+  '热议：减脂期晚餐怎么吃才不饿？',
+  '热议：这只包的五金是不是翻新过？'
+];
+function openForum(board='home'){
+  const name=forumBoards[board]||forumBoards.home;
+  toast(`已进入${name}（演示入口）`);
+  window.dispatchEvent(new CustomEvent('jianx-forum-open',{detail:{board,name}}));
+}
+let forumTopicIndex=0;
+function rotateForumTopic(){
+  const hook=$('forumHotTopic');
+  if(!hook||document.hidden||state.tab!=='ai'||reduceMotion.matches)return;
+  forumTopicIndex=(forumTopicIndex+1)%forumTopics.length;
+  hook.textContent=forumTopics[forumTopicIndex];
+}
+$('forumHotTopic')&&($('forumHotTopic').textContent=forumTopics[0]);
+document.querySelector('.forum-entry')?.addEventListener('click',e=>{
+  const target=e.target.closest('[data-forum]');
+  if(target)openForum(target.dataset.forum);
+});
 $('skillList').onclick=e=>{const item=e.target.closest('[data-skill]');if(item)selectSkill(item.dataset.skill);};$('skillBtn').onclick=openPopup;$('popupClose').onclick=closePopup;$('sheetMask').onclick=closePopup;
 $('ticker').onclick=e=>{const b=e.target.closest('[data-winner]');if(!b)return;const track=b.closest('.suggestion-track');if(Number(track.dataset.noClick)>Date.now())return;window.jianxNavigate('expert',{intent:'gacha'});};
 $('inputField').addEventListener('input',syncInput);$('inputField').addEventListener('focus',()=>{syncInput();suspend();});$('inputField').addEventListener('blur',syncInput);$('inputField').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();sendMessage();}});
@@ -175,6 +201,7 @@ new ResizeObserver(()=>positionCards(true)).observe($('skillCarousel'));
 const composerLayout=new ResizeObserver(()=>{if(state.tab==='ai'){const app=$('app').getBoundingClientRect(),input=$('inputArea').getBoundingClientRect();$('conversationPanel').style.bottom=`${app.bottom-input.top}px`;}});
 ['app','inputArea','pageScroll'].forEach(id=>composerLayout.observe($(id)));
 skillTimer=setInterval(()=>{if(!blocked()&&Date.now()>state.holdUntil)moveSkill(1);},5200);bannerTimer=setInterval(()=>{if(!blocked()&&Date.now()>state.bannerHold&&Date.now()>state.holdUntil)setBanner(state.banner+1);},7800);
+setInterval(rotateForumTopic,6800);
 if(new URLSearchParams(location.search).get('tab')==='expert')setTab('expert');else setTab('ai');
 window.addEventListener('pagehide',()=>{state.photos.forEach(p=>URL.revokeObjectURL(p.url));});
 
