@@ -208,14 +208,16 @@ test('publishing from featured asks for a board, and chat posts can add one poll
   assert.equal(page.querySelector('#forumPollImageA'),null);
   page.querySelector('[data-compose-template="free"]').click();
   assert.equal(page.querySelectorAll('[data-poll-label]').length,2);
-  assert.equal(page.querySelector('#forumPollQuestion'),page.querySelector('#forumComposeScroll input'));
+  assert.equal(page.querySelector('#forumPollQuestion'),null);
+  assert.equal(f.document.querySelector('#forumEndPoll'),null);
+  assert.doesNotMatch(f.document.body.textContent,/结束投票|投票已结束/);
+  assert.doesNotMatch(page.querySelector('#forumComposeScroll').textContent,/先写投票题目/);
   page.querySelector('#forumPollAddOption').click();
   assert.equal(page.querySelectorAll('[data-poll-label]').length,3);
-  page.querySelector('#forumPollQuestion').value='选哪只';
   [...page.querySelectorAll('[data-poll-label]')].forEach((input,index)=>{input.value=['黑色','棕色','都不选'][index];});
   page.querySelector('#forumPollDone').click();
   assert.equal(page.querySelector('#forumComposeTitle').textContent,'发布帖子');
-  assert.match(page.querySelector('.forum-poll-draft').textContent,/选哪只/);
+  assert.doesNotMatch(page.querySelector('.forum-poll-draft').textContent,/题目/);
   assert.match(page.querySelector('.forum-poll-draft').textContent,/黑色/);
   assert.match(page.querySelector('.forum-poll-draft').textContent,/都不选/);
   page.querySelector('#forumComposeTitleInput').value='新帖问留不留';
@@ -229,7 +231,11 @@ test('publishing from featured asks for a board, and chat posts can add one poll
   const detail=f.document.getElementById('forumDetail');
   assert.equal(detail.querySelector('.forum-poll h3'),null);
   assert.match(detail.querySelector('.forum-poll').textContent,/棕色/);
-  assert.doesNotMatch(detail.querySelector('.forum-poll').textContent,/选哪只/);
+  assert.doesNotMatch(detail.querySelector('.forum-poll').textContent,/题目/);
+  assert.equal(f.document.querySelector('#forumEndPoll'),null);
+  detail.querySelector('#forumDetailMore').click();
+  assert.equal(f.document.getElementById('forumMore').hidden, false);
+  assert.doesNotMatch(f.document.getElementById('forumMore').textContent,/结束投票/);
 });
 
 test('an empty forum filter explains that nothing matches',()=>{
