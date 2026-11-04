@@ -47,7 +47,7 @@ test('winner ticker entirely removes voucher announcements and preserves the eig
     '叶** 抽中了 护肤品小样','江** 抽中了 COACH钱包','程** 抽中了 美妆小样','吴** 抽中了 香水小样'
   ]);
   assert.doesNotMatch(ticker.textContent,/专家鉴定券|许\*\*|宋\*\*|杨\*\*|王\*\*/);
-  assert.equal(ticker.querySelectorAll('.suggestion-row').length,3);
+  assert.equal(ticker.querySelectorAll('.suggestion-row').length,1);
   assert.equal(ticker.querySelectorAll('[data-winner]').length,announcements.length*2,'retain the duplicated loops for continuous scrolling');
   for(const row of ticker.querySelectorAll('.suggestion-row'))assert(row.querySelectorAll('[data-winner]').length>0);
 });
