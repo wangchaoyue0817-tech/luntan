@@ -86,6 +86,16 @@ test('forum tiles open the antiques feed without the category chip row',()=>{
   assert.deepEqual([...view.querySelectorAll('.forum-filters button')].map(button=>button.textContent),['全部','圈内新鲜事','懂点门道','一起聊']);
   assert.equal(view.querySelector('.forum-sort').parentElement,view.querySelector('.forum-channel-row'));
   assert.equal(view.querySelector('.forum-sort span'),null);
+  assert.equal(view.classList.contains('is-scrolled'),false);
+  assert.equal(view.querySelector('.forum-sort').getAttribute('aria-hidden'),'true');
+  const sortFeed=view.querySelector('#forumFeed');
+  sortFeed.scrollTop=48;
+  sortFeed.dispatchEvent({type:'scroll'});
+  assert.equal(view.classList.contains('is-scrolled'),true);
+  assert.equal(view.querySelector('.forum-sort').getAttribute('aria-hidden'),'false');
+  sortFeed.scrollTop=0;
+  sortFeed.dispatchEvent({type:'scroll'});
+  assert.equal(view.classList.contains('is-scrolled'),false);
   assert.match(source('forum.css'),/\.forum-channel-row\{[^}]*flex-direction:column/);
   assert.match(source('forum.css'),/\.forum-filters\{[^}]*justify-content:center/);
   assert.match(source('forum.css'),/\.forum-board-track\{[^}]*justify-content:center/);
@@ -177,6 +187,29 @@ test('featured and goods use a two-column waterfall while health stays a single 
   assert.ok(view.querySelector('.forum-mosaic'));
 });
 
+test('feed photos crop inside one frame and likes stay below the pictures',()=>{
+  const css=source('forum.css');
+  assert.match(css,/\.forum-pair\{[^}]*height:148px[^}]*overflow:hidden/);
+  assert.match(css,/\.forum-shot\{[^}]*overflow:hidden/);
+  assert.match(css,/\.forum-shot img\{[^}]*object-fit:cover/);
+  const f=fixture();
+  f.document.querySelector('[data-forum="antiques"]').click();
+  const bowl=f.document.querySelector('[data-post="bowl"]');
+  assert.equal(bowl.querySelectorAll('.forum-shot').length,3);
+  const order=bowl.querySelectorAll('.forum-media, .forum-actions');
+  assert.equal(order[0].classList.contains('forum-media'),true);
+  assert.equal(order[1].classList.contains('forum-actions'),true);
+  f.document.querySelector('[data-board="health"]').click();
+  const plan=f.document.querySelector('[data-post="plan"]');
+  assert.ok(plan.querySelector('.forum-pair.is-single'));
+  assert.equal(plan.querySelectorAll('.forum-shot img').length,1);
+  const bagBoard=f.document.querySelector('[data-board="goods"]');
+  bagBoard.click();
+  const bag=f.document.querySelector('[data-post="bag"]');
+  assert.ok(bag.querySelector('.forum-cover'));
+  assert.equal(bag.querySelector('.forum-actions').closest('.forum-tile'),bag);
+});
+
 test('publishing from featured asks for a board, and chat posts can add one poll',()=>{
   const css=source('forum.css');
   assert.match(css,/\.forum-view button\.forum-publish\{[^}]*linear-gradient/);
@@ -234,6 +267,35 @@ test('publishing from featured asks for a board, and chat posts can add one poll
   f.document.getElementById('forumEndPoll').click();
   assert.match(detail.querySelector('.forum-poll').textContent,/投票已结束/);
   assert.equal(detail.querySelector('.forum-choice').disabled, true);
+});
+
+test('an author avatar lists that person’s posts and a post still opens for voting',()=>{
+  const f=fixture();
+  f.document.querySelector('[data-forum="health"]').click();
+  const view=f.document.getElementById('forumView');
+  view.querySelector('[data-author="南风"]').click();
+  const profile=f.document.getElementById('forumProfile');
+  assert.equal(profile.hidden,false);
+  assert.match(profile.textContent,/南风/);
+  assert.match(profile.textContent,/这盘减脂晚餐，留还是不留？/);
+  assert.match(profile.textContent,/减脂期晚餐，一盘怎么搭配？/);
+  assert.doesNotMatch(profile.textContent,/晨跑/);
+  profile.querySelector('[data-open="plan"]').click();
+  const detail=f.document.getElementById('forumDetail');
+  assert.equal(detail.hidden,false);
+  detail.querySelector('[data-poll-option="keep"]').click();
+  assert.match(detail.textContent,/已投票/);
+  f.document.getElementById('forumDetailBack').click();
+  assert.equal(detail.hidden,true);
+  assert.equal(profile.hidden,false);
+  f.document.getElementById('forumProfileBack').click();
+  assert.equal(profile.hidden,true);
+  view.querySelector('[data-board="antiques"]').click();
+  view.querySelector('[data-open="coin"]').click();
+  detail.querySelector('[data-author="陈叔"]').click();
+  assert.equal(profile.hidden,false);
+  assert.match(profile.textContent,/还没有发过帖子/);
+  assert.doesNotMatch(profile.textContent,/包浆怎么看/);
 });
 
 test('an empty forum filter explains that nothing matches',()=>{
