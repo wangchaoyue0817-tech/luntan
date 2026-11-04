@@ -172,7 +172,8 @@ const forumTopics=[
 ];
 function openForum(board='home'){
   const name=forumBoards[board]||forumBoards.home;
-  toast(`已进入${name}（演示入口）`);
+  if(typeof window.jianxOpenForum==='function')window.jianxOpenForum(board);
+  else toast(`已进入${name}（演示入口）`);
   window.dispatchEvent(new CustomEvent('jianx-forum-open',{detail:{board,name}}));
 }
 let forumTopicIndex=0;

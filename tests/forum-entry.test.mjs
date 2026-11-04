@@ -32,7 +32,7 @@ function fixture(){
     matchMedia:()=>({matches:true}),ResizeObserver:class{observe(){}},
     requestAnimationFrame(){},setInterval(){},clearInterval(){},setTimeout(){},clearTimeout(){}
   });
-  for(const filename of ['data.js','assets/icon-map.js','app.js'])vm.runInContext(source(filename),context,{filename});
+  for(const filename of ['data.js','assets/icon-map.js','app.js','forum.js'])vm.runInContext(source(filename),context,{filename});
   return{document,window,context,navigations,forumOpens};
 }
 
@@ -61,8 +61,8 @@ test('forum entry sits below the banner with three resident boards',()=>{
   assert.equal(banner.parentElement,section.parentElement);
   const siblings=banner.parentElement.children;
   const bannerIndex=siblings.indexOf(banner);
-  assert.equal(siblings[bannerIndex+1],section);
-  assert.equal(siblings[bannerIndex+2],ticker);
+  assert.equal(siblings[bannerIndex-1],section);
+  assert.equal(siblings[bannerIndex+1],ticker);
   assert.equal(section.getAttribute('aria-label'),'鉴X社区');
   assert.equal(f.document.querySelector('.forum-card-title').textContent,'鉴X社区');
   const boards=[...f.document.querySelectorAll('.forum-board')].map(el=>el.querySelector('strong').textContent);
@@ -70,13 +70,44 @@ test('forum entry sits below the banner with three resident boards',()=>{
   assert.equal(f.document.querySelectorAll('[data-forum]').length,4);
 });
 
-test('forum tiles expose hot-topic copy and open the selected board',()=>{
+test('forum tiles open the selected board as a two-column waterfall',()=>{
   const f=fixture();
   assert.match(f.document.getElementById('forumHotTopic').textContent,/热议：/);
-  const antiques=f.document.querySelector('[data-forum="antiques"]');
-  antiques.click();
-  assert.deepEqual(f.forumOpens,[{board:'antiques',name:'古玩雅集'}]);
-  assert.match(f.document.getElementById('toast').textContent,/古玩雅集/);
   f.document.querySelector('[data-forum="home"]').click();
-  assert.equal(f.forumOpens.at(-1).board,'home');
+  const view=f.document.getElementById('forumView');
+  assert.equal(view.hidden,false);
+  assert.equal(view.querySelector('[data-board="featured"]').getAttribute('aria-selected'),'true');
+  const columns=view.querySelectorAll('.forum-col');
+  assert.equal(columns.length,2);
+  assert.ok([...columns].every(column=>column.querySelector('.forum-card')));
+  const ratios=[...view.querySelectorAll('.forum-card')].map(card=>card.getAttribute('style'));
+  assert.ok(new Set(ratios).size>=4);
+  assert.equal(view.querySelector('.forum-badge'),null);
+  f.document.querySelector('[data-forum="antiques"]').click();
+  assert.equal(view.querySelector('[data-board="antiques"]').getAttribute('aria-selected'),'true');
+  assert.ok([...view.querySelectorAll('.forum-source')].every(node=>node.textContent.startsWith('古玩雅集')));
+  assert.deepEqual(f.forumOpens.map(item=>item.board),['home','antiques']);
+  f.document.getElementById('forumBack').click();
+  assert.equal(view.hidden,true);
+});
+
+test('review filter, poll and like stay on the waterfall card',()=>{
+  const f=fixture();
+  f.document.querySelector('[data-forum="home"]').click();
+  const view=f.document.getElementById('forumView');
+  view.querySelector('[data-filter="review"]').click();
+  assert.ok([...view.querySelectorAll('.forum-source')].every(node=>node.textContent.includes('大家评')));
+  const vote=view.querySelector('[data-vote]');
+  vote.click();
+  assert.equal(view.querySelector(`[data-vote="${vote.dataset.vote}"]`).getAttribute('aria-pressed'),'true');
+  const like=view.querySelector('[data-like]');
+  like.click();
+  assert.equal(view.querySelector(`[data-like="${like.dataset.like}"]`).getAttribute('aria-pressed'),'true');
+});
+
+test('an empty forum filter explains that nothing matches',()=>{
+  const f=fixture();
+  f.document.querySelector('[data-forum="health"]').click();
+  f.document.querySelector('[data-filter="review"]').click();
+  assert.match(f.document.querySelector('.forum-empty').textContent,/还没有相关帖子/);
 });
