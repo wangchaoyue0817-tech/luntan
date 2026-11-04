@@ -60,7 +60,7 @@ const posts = [
   ]},
   {id:'watch', board:'goods', channel:'懂点门道', author:'阿宁', avatar:'is-gold', topic:'腕表 · 懂点门道', title:'表带接口，怎么判断后换？', images:['assets/forum/watch.jpg'], ratio:'tall', likes:15, liked:false, saved:false, at:14, rank:5, comments:[]}
 ];
-const forumState = {board:'antiques', filter:'all', sort:'hot', query:'', postId:null, replyId:null, reportKind:null, reportId:null, reason:'', returnFocus:null};
+const forumState = {board:'antiques', filter:'all', sort:'hot', query:'', postId:null, replyId:null, returnFocus:null};
 function ensureScreen(){
   let view = byId('forumView');
   if (!view) {
@@ -71,7 +71,7 @@ function ensureScreen(){
   view.className = 'forum-view';
   view.setAttribute('aria-label', '论坛');
   if (view.querySelector('[data-sort]') && view.querySelector('#forumDetailSend')) return view;
-  view.innerHTML = `<header class="forum-top"><button type="button" class="forum-icon-btn" id="forumBack" aria-label="返回首页"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h1>论坛</h1><button type="button" class="forum-icon-btn" id="forumSearchBtn" aria-label="搜索帖子" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.2" stroke="currentColor" stroke-width="1.8"/><path d="M16 16.5 20 20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button type="button" class="forum-icon-btn" id="forumInboxBtn" aria-label="消息"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 16.5 4 20l4.2-1.4A8.2 8.2 0 1 0 6 16.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><i class="forum-dot" aria-hidden="true"></i></button></header><form id="forumSearch" class="forum-search" hidden role="search"><label for="forumQuery">搜索帖子</label><input id="forumQuery" type="search" maxlength="40" placeholder="标题或作者"></form><div class="forum-board-track" role="tablist" aria-label="论坛板块"><button type="button" role="tab" data-board="featured">精选</button><button type="button" role="tab" data-board="antiques" aria-selected="true">古玩雅集</button><button type="button" role="tab" data-board="health">健康生活家</button><button type="button" role="tab" data-board="goods">好物研究所</button></div><div class="forum-channel-row"><div class="forum-filters" role="tablist" aria-label="话题"><button type="button" role="tab" data-filter="all" aria-selected="true">全部</button><button type="button" role="tab" data-filter="fresh">圈内新鲜事</button><button type="button" role="tab" data-filter="craft">懂点门道</button><button type="button" role="tab" data-filter="talk">一起聊</button></div><div class="forum-sort" role="group" aria-label="排序"><button type="button" data-sort="hot" aria-pressed="true">推荐</button><button type="button" data-sort="new">最新</button></div></div><div class="forum-feed" id="forumFeed"></div><button type="button" class="forum-publish" id="forumPublish"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 19.5h4L19 9a2.1 2.1 0 0 0-3-3L5.5 16.5v3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span>发布</span></button><section id="forumDetail" class="forum-detail" hidden><header class="forum-top"><button type="button" class="forum-icon-btn" id="forumDetailBack" aria-label="返回论坛"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2 id="forumDetailTitle">帖子详情</h2><button type="button" class="forum-icon-btn" id="forumDetailMore" aria-label="更多"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="18" cy="12" r="1.4" fill="currentColor"/></svg></button></header><div class="forum-detail-scroll" id="forumDetailBody"></div><form id="forumDetailComposer" class="forum-detail-bar"><label class="forum-sr" for="forumDetailInput">评论</label><input id="forumDetailInput" maxlength="200" placeholder="说说你的看法"><button type="button" id="forumDetailSend" disabled>发送</button><button type="button" class="forum-comment" id="forumDetailDiscuss" aria-label="评论"></button><button type="button" class="forum-like" id="forumDetailLike" aria-label="点赞"></button><button type="button" id="forumDetailSave" aria-label="收藏" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 4 2.2 4.6 5 .7-3.6 3.5.9 5L12 15.8 7.5 17.8l.9-5L4.8 9.3l5-.7L12 4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button></form></section><div id="forumMore" class="forum-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="forumMoreTitle"><div class="forum-sheet-panel"><header class="forum-sheet-head"><h2 id="forumMoreTitle">更多</h2><button type="button" class="forum-icon-btn" id="forumMoreClose" aria-label="关闭更多">×</button></header><button type="button" class="forum-menu" id="forumReportPost">举报帖子</button><button type="button" class="forum-menu" id="forumShowSaved">我的收藏</button><button type="button" class="forum-menu" id="forumEndPoll" hidden>结束投票</button></div></div><div id="forumReport" class="forum-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="forumReportTitle"><div class="forum-sheet-panel"><header class="forum-sheet-head"><h2 id="forumReportTitle">举报</h2><button type="button" class="forum-icon-btn" id="forumReportClose" aria-label="关闭举报">×</button></header><div class="forum-reasons"><button type="button" data-reason="不实内容">不实内容</button><button type="button" data-reason="广告引流">广告引流</button><button type="button" data-reason="人身攻击">人身攻击</button><button type="button" data-reason="其他">其他</button></div><p id="forumReportStatus" class="forum-note" role="status"></p><button type="button" class="forum-submit" id="forumReportSend" disabled>提交</button></div></div><div id="forumSaved" class="forum-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="forumSavedTitle"><div class="forum-sheet-panel"><header class="forum-sheet-head"><h2 id="forumSavedTitle">我的收藏</h2><button type="button" class="forum-icon-btn" id="forumSavedClose" aria-label="关闭收藏">×</button></header><div class="forum-inbox" id="forumSavedList"></div></div></div><div id="forumInbox" class="forum-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="forumInboxTitle"><div class="forum-sheet-panel"><header class="forum-sheet-head"><h2 id="forumInboxTitle">消息</h2><button type="button" class="forum-icon-btn" id="forumInboxClose" aria-label="关闭消息">×</button></header><div class="forum-inbox" id="forumInboxList"></div></div></div><section id="forumCompose" class="forum-compose" hidden><header class="forum-top"><button type="button" class="forum-icon-btn" id="forumComposeClose" aria-label="关闭发布">×</button><h2 id="forumComposeTitle">发布帖子</h2><button type="button" class="forum-text-btn" id="forumComposePreview">预览</button></header><form id="forumComposeForm" class="forum-compose-form"><div class="forum-compose-scroll" id="forumComposeScroll"></div><div class="forum-compose-bar" id="forumComposeBar"><p id="forumComposeError" class="forum-error" role="status"></p><button type="submit" class="forum-submit">发布</button><p class="forum-note">只保存在本次浏览，不会公开发布。</p></div></form></section>`;
+  view.innerHTML = `<header class="forum-top"><button type="button" class="forum-icon-btn" id="forumBack" aria-label="返回首页"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h1>论坛</h1><button type="button" class="forum-icon-btn" id="forumSearchBtn" aria-label="搜索帖子" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.2" stroke="currentColor" stroke-width="1.8"/><path d="M16 16.5 20 20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button type="button" class="forum-icon-btn" id="forumInboxBtn" aria-label="消息"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 16.5 4 20l4.2-1.4A8.2 8.2 0 1 0 6 16.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><i class="forum-dot" aria-hidden="true"></i></button></header><form id="forumSearch" class="forum-search" hidden role="search"><label for="forumQuery">搜索帖子</label><input id="forumQuery" type="search" maxlength="40" placeholder="标题或作者"></form><div class="forum-board-track" role="tablist" aria-label="论坛板块"><button type="button" role="tab" data-board="featured">精选</button><button type="button" role="tab" data-board="antiques" aria-selected="true">古玩雅集</button><button type="button" role="tab" data-board="health">健康生活家</button><button type="button" role="tab" data-board="goods">好物研究所</button></div><div class="forum-channel-row"><div class="forum-filters" role="tablist" aria-label="话题"><button type="button" role="tab" data-filter="all" aria-selected="true">全部</button><button type="button" role="tab" data-filter="fresh">圈内新鲜事</button><button type="button" role="tab" data-filter="craft">懂点门道</button><button type="button" role="tab" data-filter="talk">一起聊</button></div><div class="forum-sort" role="group" aria-label="排序"><button type="button" data-sort="hot" aria-pressed="true">推荐</button><button type="button" data-sort="new">最新</button></div></div><div class="forum-feed" id="forumFeed"></div><button type="button" class="forum-publish" id="forumPublish"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 19.5h4L19 9a2.1 2.1 0 0 0-3-3L5.5 16.5v3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span>发布</span></button><section id="forumDetail" class="forum-detail" hidden><header class="forum-top"><button type="button" class="forum-icon-btn" id="forumDetailBack" aria-label="返回论坛"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2 id="forumDetailTitle">帖子详情</h2><button type="button" class="forum-icon-btn" id="forumDetailMore" aria-label="更多"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="18" cy="12" r="1.4" fill="currentColor"/></svg></button></header><div class="forum-detail-scroll" id="forumDetailBody"></div><form id="forumDetailComposer" class="forum-detail-bar"><label class="forum-sr" for="forumDetailInput">评论</label><input id="forumDetailInput" maxlength="200" placeholder="说说你的看法"><button type="button" id="forumDetailSend" disabled>发送</button><button type="button" class="forum-comment" id="forumDetailDiscuss" aria-label="评论"></button><button type="button" class="forum-like" id="forumDetailLike" aria-label="点赞"></button><button type="button" id="forumDetailSave" aria-label="收藏" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 4 2.2 4.6 5 .7-3.6 3.5.9 5L12 15.8 7.5 17.8l.9-5L4.8 9.3l5-.7L12 4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button></form></section><div id="forumMore" class="forum-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="forumMoreTitle"><div class="forum-sheet-panel"><header class="forum-sheet-head"><h2 id="forumMoreTitle">更多</h2><button type="button" class="forum-icon-btn" id="forumMoreClose" aria-label="关闭更多">×</button></header><button type="button" class="forum-menu" id="forumShowSaved">我的收藏</button><button type="button" class="forum-menu" id="forumEndPoll" hidden>结束投票</button></div></div><div id="forumSaved" class="forum-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="forumSavedTitle"><div class="forum-sheet-panel"><header class="forum-sheet-head"><h2 id="forumSavedTitle">我的收藏</h2><button type="button" class="forum-icon-btn" id="forumSavedClose" aria-label="关闭收藏">×</button></header><div class="forum-inbox" id="forumSavedList"></div></div></div><div id="forumInbox" class="forum-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="forumInboxTitle"><div class="forum-sheet-panel"><header class="forum-sheet-head"><h2 id="forumInboxTitle">消息</h2><button type="button" class="forum-icon-btn" id="forumInboxClose" aria-label="关闭消息">×</button></header><div class="forum-inbox" id="forumInboxList"></div></div></div><section id="forumCompose" class="forum-compose" hidden><header class="forum-top"><button type="button" class="forum-icon-btn" id="forumComposeClose" aria-label="关闭发布">×</button><h2 id="forumComposeTitle">发布帖子</h2><button type="button" class="forum-text-btn" id="forumComposePreview">预览</button></header><form id="forumComposeForm" class="forum-compose-form"><div class="forum-compose-scroll" id="forumComposeScroll"></div><div class="forum-compose-bar" id="forumComposeBar"><p id="forumComposeError" class="forum-error" role="status"></p><button type="submit" class="forum-submit">发布</button><p class="forum-note">只保存在本次浏览，不会公开发布。</p></div></form></section>`;
   return view;
 }
 function postById(id){return posts.find(post => post.id === id);}
@@ -163,7 +163,7 @@ function commentBlock(post, comment, nested){
   const remove = comment.mine ? `<button type="button" data-delete-comment="${comment.id}">删除</button>` : '';
   const replyBox = forumState.replyId === comment.id ? `<form class="forum-reply"><label for="forumReplyInput">回复 ${esc(comment.author)}</label><input id="forumReplyInput" maxlength="200"><button type="button" id="forumReplySend">发送</button></form>` : '';
   const replies = (comment.replies || []).map(reply => commentBlock(post, reply, true)).join('');
-  return `<article class="forum-thread${nested ? ' is-reply' : ''}" data-comment-id="${comment.id}"><i class="forum-avatar ${comment.avatar || 'is-violet'}" aria-hidden="true"></i><div><strong>${esc(comment.author)}${helpful}</strong><p>${esc(comment.text)}</p><p class="forum-thread-meta">${comment.time ? `<time>${esc(comment.time)}</time>` : ''}<button type="button" data-reply="${comment.id}">回复</button>${helpfulButton}${remove}<button type="button" data-report-comment="${comment.id}">举报</button></p>${replyBox}${replies}</div><button type="button" class="forum-like" data-comment-like="${comment.id}" aria-pressed="${Boolean(comment.liked)}" aria-label="${comment.liked ? '取消赞' : '点赞'}">${thumb(comment.liked)}<span>${comment.likes || 0}</span></button></article>`;
+  return `<article class="forum-thread${nested ? ' is-reply' : ''}" data-comment-id="${comment.id}"><i class="forum-avatar ${comment.avatar || 'is-violet'}" aria-hidden="true"></i><div><strong>${esc(comment.author)}${helpful}</strong><p>${esc(comment.text)}</p><p class="forum-thread-meta">${comment.time ? `<time>${esc(comment.time)}</time>` : ''}<button type="button" data-reply="${comment.id}">回复</button>${helpfulButton}${remove}</p>${replyBox}${replies}</div><button type="button" class="forum-like" data-comment-like="${comment.id}" aria-pressed="${Boolean(comment.liked)}" aria-label="${comment.liked ? '取消赞' : '点赞'}">${thumb(comment.liked)}<span>${comment.likes || 0}</span></button></article>`;
 }
 function choiceButton(post, option){
   const poll = post.poll;
@@ -210,7 +210,6 @@ function openDetail(id){
   syncDetailSend();
   byId('forumDetail').hidden = false;
   byId('forumMore').hidden = true;
-  byId('forumReport').hidden = true;
   byId('forumSaved').hidden = true;
   renderDetail();
   byId('forumDetailBack').focus();
@@ -256,16 +255,6 @@ function addComment(text, parentId){
 function renderSaved(){
   const saved = posts.filter(post => post.saved);
   byId('forumSavedList').innerHTML = saved.length ? saved.map(post => `<button type="button" data-saved="${post.id}"><strong>${esc(post.author)} · ${esc(post.title)}</strong><span>${esc(boardName[post.board])}</span></button>`).join('') : '<p class="forum-empty">还没有收藏</p>';
-}
-function openReport(kind, id){
-  forumState.reportKind = kind;
-  forumState.reportId = id;
-  forumState.reason = '';
-  byId('forumReportStatus').textContent = '';
-  byId('forumReportSend').disabled = true;
-  byId('forumReport').querySelectorAll('[data-reason]').forEach(button => button.setAttribute('aria-pressed', 'false'));
-  byId('forumMore').hidden = true;
-  byId('forumReport').hidden = false;
 }
 function renderFeedAndDetail(){renderFeed(); renderDetail();}
 const postTypes = [
@@ -431,7 +420,6 @@ function openForum(board){
   byId('forumCompose').hidden = true;
   byId('forumDetail').hidden = true;
   byId('forumMore').hidden = true;
-  byId('forumReport').hidden = true;
   byId('forumSaved').hidden = true;
   byId('forumView').hidden = false;
   renderChrome();
@@ -455,9 +443,7 @@ view.addEventListener('click', event => {
   const reply = event.target.closest('[data-reply]');
   const remove = event.target.closest('[data-delete-comment]');
   const helpful = event.target.closest('[data-helpful]');
-  const reason = event.target.closest('[data-reason]');
   const saved = event.target.closest('[data-saved]');
-  const reportComment = event.target.closest('[data-report-comment]');
   const inbox = event.target.closest('[data-inbox]');
   const open = event.target.closest('[data-open]');
   if (board) { forumState.board = board.dataset.board; byId('forumDetail').hidden = true; renderChrome(); renderFeed(); return; }
@@ -498,13 +484,6 @@ view.addEventListener('click', event => {
     if (item && post.mine) { item.helpful = !item.helpful; renderDetail(); }
     return;
   }
-  if (reason) {
-    forumState.reason = reason.dataset.reason;
-    byId('forumReport').querySelectorAll('[data-reason]').forEach(button => button.setAttribute('aria-pressed', String(button === reason)));
-    byId('forumReportSend').disabled = false;
-    return;
-  }
-  if (reportComment) { openReport('comment', reportComment.dataset.reportComment); return; }
   if (saved) { byId('forumSaved').hidden = true; openDetail(saved.dataset.saved); return; }
   if (inbox) { byId('forumInbox').hidden = true; openDetail(inbox.dataset.inbox); return; }
   if (open) { openDetail(open.dataset.open); return; }
@@ -536,7 +515,6 @@ view.addEventListener('click', event => {
 });
 byId('forumDetailMore').onclick = () => { renderDetail(); byId('forumMore').hidden = false; };
 byId('forumMoreClose').onclick = () => { byId('forumMore').hidden = true; };
-byId('forumReportPost').onclick = () => openReport('post', forumState.postId);
 byId('forumEndPoll').onclick = () => {
   const post = postById(forumState.postId);
   if (!post || !post.mine || !post.poll) return;
@@ -546,12 +524,6 @@ byId('forumEndPoll').onclick = () => {
 };
 byId('forumShowSaved').onclick = () => { byId('forumMore').hidden = true; renderSaved(); byId('forumSaved').hidden = false; };
 byId('forumSavedClose').onclick = () => { byId('forumSaved').hidden = true; };
-byId('forumReportClose').onclick = () => { byId('forumReport').hidden = true; };
-byId('forumReportSend').onclick = () => {
-  if (!forumState.reason) return;
-  byId('forumReportStatus').textContent = '已提交，交由运营处理';
-  byId('forumReportSend').disabled = true;
-};
 byId('forumSearchBtn').onclick = () => { const box = byId('forumSearch'); box.hidden = !box.hidden; if (!box.hidden) byId('forumQuery').focus(); };
 byId('forumQuery').addEventListener('input', event => { forumState.query = event.target.value; renderFeed(); });
 byId('forumSearch').addEventListener('submit', event => event.preventDefault());
@@ -572,7 +544,6 @@ view.addEventListener('change', event => {
 });
 document.addEventListener('keydown', event => {
   if (event.key !== 'Escape' || byId('forumView').hidden) return;
-  if (!byId('forumReport').hidden) { byId('forumReport').hidden = true; return; }
   if (!byId('forumSaved').hidden) { byId('forumSaved').hidden = true; return; }
   if (!byId('forumMore').hidden) { byId('forumMore').hidden = true; return; }
   if (!byId('forumDetail').hidden) return closeDetail();

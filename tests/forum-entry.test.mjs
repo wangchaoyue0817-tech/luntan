@@ -90,6 +90,8 @@ test('forum tiles open the antiques feed without the category chip row',()=>{
   assert.match(source('forum.css'),/\.forum-filters\{[^}]*justify-content:center/);
   assert.match(source('forum.css'),/\.forum-board-track\{[^}]*justify-content:center/);
   assert.doesNotMatch(view.querySelector('.forum-board-track').textContent,/玉石文玩|邮票|杂项/);
+  assert.equal(view.querySelector('#forumReport'),null);
+  assert.doesNotMatch(view.textContent,/举报/);
   assert.equal(view.querySelector('.forum-masonry'),null);
   assert.match(view.textContent,/这只青花碗，底足怎么看？/);
   assert.ok(view.querySelector('.forum-mosaic'));
