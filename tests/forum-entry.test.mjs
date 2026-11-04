@@ -209,8 +209,6 @@ test('publishing from featured asks for a board, and chat posts can add one poll
   page.querySelector('[data-compose-template="free"]').click();
   assert.equal(page.querySelectorAll('[data-poll-label]').length,2);
   assert.equal(page.querySelector('#forumPollQuestion'),null);
-  assert.equal(f.document.querySelector('#forumEndPoll'),null);
-  assert.doesNotMatch(f.document.body.textContent,/结束投票|投票已结束/);
   assert.doesNotMatch(page.querySelector('#forumComposeScroll').textContent,/先写投票题目/);
   page.querySelector('#forumPollAddOption').click();
   assert.equal(page.querySelectorAll('[data-poll-label]').length,3);
@@ -232,10 +230,10 @@ test('publishing from featured asks for a board, and chat posts can add one poll
   assert.equal(detail.querySelector('.forum-poll h3'),null);
   assert.match(detail.querySelector('.forum-poll').textContent,/棕色/);
   assert.doesNotMatch(detail.querySelector('.forum-poll').textContent,/题目/);
-  assert.equal(f.document.querySelector('#forumEndPoll'),null);
   detail.querySelector('#forumDetailMore').click();
-  assert.equal(f.document.getElementById('forumMore').hidden, false);
-  assert.doesNotMatch(f.document.getElementById('forumMore').textContent,/结束投票/);
+  f.document.getElementById('forumEndPoll').click();
+  assert.match(detail.querySelector('.forum-poll').textContent,/投票已结束/);
+  assert.equal(detail.querySelector('.forum-choice').disabled, true);
 });
 
 test('an empty forum filter explains that nothing matches',()=>{
