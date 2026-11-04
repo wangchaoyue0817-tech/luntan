@@ -101,10 +101,10 @@ function actions(post){return `<div class="forum-actions"><button type="button" 
 function pollPreview(post){
   const poll = post.poll;
   if (!poll) return '';
-  if (poll.template === 'tier') return `<button type="button" class="forum-poll-preview is-link" data-open="${post.id}">参与评价</button>`;
-  const mark = poll.template === 'verdict' ? '<em>网友判断</em>' : '';
+  const mark = poll.template === 'verdict' ? '网友判断' : '投票';
   const chips = poll.options.map(option => `<span>${esc(option.preview || option.label)}</span>`).join('');
-  return `<button type="button" class="forum-poll-preview" data-open="${post.id}">${mark}${chips}</button>`;
+  const fade = poll.options.length > 5 ? ' is-fade' : '';
+  return `<button type="button" class="forum-poll-preview" data-open="${post.id}" aria-label="查看${esc(post.title)}的投票"><em>${mark}</em><span class="forum-poll-options${fade}">${chips}</span></button>`;
 }
 function mediaButton(post, inner){
   if (!inner) return '';

@@ -158,7 +158,13 @@ test('featured and goods use a two-column waterfall while health stays a single 
   assert.ok(view.querySelector('.forum-cover'));
   assert.doesNotMatch(view.querySelector('.forum-board-track').textContent,/玉石文玩|邮票|杂项/);
   assert.match(view.textContent,/A\. 黑色通勤包/);
-  assert.match(view.textContent,/参与评价/);
+  const cushion=view.querySelector('[data-post="cushion"] .forum-poll-preview');
+  assert.match(cushion.textContent,/投票/);
+  assert.match(cushion.textContent,/夯/);
+  assert.match(cushion.textContent,/拉完了/);
+  assert.equal(cushion.querySelectorAll('.forum-poll-options span').length,5);
+  assert.equal(cushion.querySelector('.is-fade'),null);
+  assert.doesNotMatch(cushion.textContent,/参与评价/);
   view.querySelector('[data-like="cushion"]').click();
   assert.equal(view.querySelector('[data-like="cushion"] span').textContent,'22');
   view.querySelector('[data-comment="cushion"]').click();
@@ -267,6 +273,27 @@ test('publishing from featured asks for a board, and chat posts can add one poll
   f.document.getElementById('forumEndPoll').click();
   assert.match(detail.querySelector('.forum-poll').textContent,/投票已结束/);
   assert.equal(detail.querySelector('.forum-choice').disabled, true);
+});
+
+test('a feed vote with more than five options fades the tail instead of dropping it',()=>{
+  const f=fixture();
+  f.window.jianxForum.posts.push({
+    id:'many',board:'goods',channel:'一起聊',author:'米果',avatar:'is-violet',topic:'一起聊',title:'六个选项怎么排',images:[],likes:1,liked:false,saved:false,at:99,rank:9,comments:[],
+    poll:{template:'free',myVote:null,options:[
+      {id:'1',label:'一',preview:'一',votes:1},
+      {id:'2',label:'二',preview:'二',votes:1},
+      {id:'3',label:'三',preview:'三',votes:1},
+      {id:'4',label:'四',preview:'四',votes:1},
+      {id:'5',label:'五',preview:'五',votes:1},
+      {id:'6',label:'六',preview:'六',votes:1}
+    ]}
+  });
+  f.document.querySelector('[data-forum="goods"]').click();
+  const many=f.document.querySelector('[data-post="many"] .forum-poll-options');
+  assert.equal(many.classList.contains('is-fade'),true);
+  assert.equal(many.querySelectorAll('span').length,6);
+  assert.match(many.textContent,/六/);
+  assert.equal(many.querySelector('[data-poll-option]'),null);
 });
 
 test('an author avatar lists that person’s posts and a post still opens for voting',()=>{
