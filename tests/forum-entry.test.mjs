@@ -51,8 +51,9 @@ test('homepage banner copy collapses to a single headline line before the CTA',(
   assert.match(css,/\.forum-card-head\{[^}]*flex-direction:row/);
   assert.match(css,/\.forum-card-hook\{[^}]*text-overflow:ellipsis/);
   assert.match(source('spectral.css'),/#aiHome \.banner-copy\{[^}]*flex-direction:row/);
-  assert.match(source('spectral.css'),/#aiHome \.banner-viewport:after\{[^}]*edgeFlow/);
-  assert.match(css,/\.forum-card:after\{[^}]*edgeFlow/);
+  assert.match(source('spectral.css'),/#aiHome \.feature-banner\{[^}]*height:107px/);
+  assert.doesNotMatch(source('spectral.css'),/#aiHome \.banner-viewport:after/);
+  assert.match(css,/\.forum-card:after\{[^}]*padding:1px[^}]*edgeFlow/);
   assert.doesNotMatch(source('spectral.css'),/#aiHome \.forum-card\{[^}]*height:/);
 });
 
