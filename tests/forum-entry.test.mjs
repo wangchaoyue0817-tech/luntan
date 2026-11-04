@@ -83,7 +83,7 @@ test('forum tiles open the antiques feed without the category chip row',()=>{
   assert.equal(view.hidden,false);
   assert.equal(view.querySelector('h1').textContent,'论坛');
   assert.equal(view.querySelector('[data-board="antiques"]').getAttribute('aria-selected'),'true');
-  assert.deepEqual([...view.querySelectorAll('.forum-filters button')].map(button=>button.textContent),['全部','圈内新鲜事','懂点门道','大家评','一起聊']);
+  assert.deepEqual([...view.querySelectorAll('.forum-filters button')].map(button=>button.textContent),['全部','圈内新鲜事','懂点门道','说说看']);
   assert.doesNotMatch(view.querySelector('.forum-board-track').textContent,/玉石文玩|邮票|杂项/);
   assert.equal(view.querySelector('.forum-masonry'),null);
   assert.match(view.textContent,/这只青花碗，底足怎么看？/);
@@ -98,9 +98,10 @@ test('antiques likes, comments, votes and topic filters stay in sync',()=>{
   const f=fixture();
   f.document.querySelector('[data-forum="antiques"]').click();
   const view=f.document.getElementById('forumView');
-  view.querySelector('[data-filter="review"]').click();
-  assert.match(view.querySelector('.forum-title').textContent,/青花碗/);
-  assert.equal(view.querySelectorAll('.forum-post').length,1);
+  view.querySelector('[data-filter="talk"]').click();
+  assert.match(view.querySelector('#forumFeed').textContent,/青花碗/);
+  assert.match(view.querySelector('#forumFeed').textContent,/第一次上手/);
+  assert.equal(view.querySelectorAll('.forum-post').length,2);
   assert.match(view.querySelector('.forum-poll-preview').textContent,/真/);
   view.querySelector('[data-open="bowl"]').click();
   const detail=f.document.getElementById('forumDetail');
@@ -173,7 +174,9 @@ test('an empty forum filter explains that nothing matches',()=>{
   f.document.querySelector('[data-forum="health"]').click();
   f.document.querySelector('[data-filter="fresh"]').click();
   assert.match(f.document.querySelector('.forum-empty').textContent,/还没有相关帖子/);
-  f.document.querySelector('[data-filter="review"]').click();
-  assert.match(f.document.querySelector('#forumFeed').textContent,/留/);
-  assert.match(f.document.querySelector('#forumFeed').textContent,/买/);
+  f.document.querySelector('[data-filter="talk"]').click();
+  const talk=f.document.querySelector('#forumFeed').textContent;
+  assert.match(talk,/留/);
+  assert.match(talk,/买/);
+  assert.match(talk,/晨跑/);
 });
