@@ -198,6 +198,12 @@ test('publishing from featured asks for a board, and chat posts can add one poll
   page.querySelector('[data-compose-type="chat"]').click();
   page.querySelector('#forumAddPoll').click();
   assert.equal(page.querySelector('#forumComposeTitle').textContent,'投票设置');
+  assert.equal([...page.querySelectorAll('[data-compose-template]')].some(button=>button.textContent==='自己填两个选项'),true);
+  assert.equal([...page.querySelectorAll('[data-compose-template]')].some(button=>button.textContent==='A / B'),false);
+  page.querySelector('[data-compose-template="ab"]').click();
+  assert.match(page.querySelector('#forumComposeScroll').textContent,/第一个选项/);
+  assert.match(page.querySelector('#forumComposeScroll').textContent,/第二个选项/);
+  assert.doesNotMatch(page.querySelector('#forumComposeScroll').textContent,/选项 A/);
   assert.match(page.textContent,/出现第一票后/);
   page.querySelector('[data-compose-template="keep"]').click();
   page.querySelector('#forumPollQuestion').value='这只留不留';

@@ -275,7 +275,7 @@ const postTypes = [
 const pollTemplates = {
   keep:{name:'留 / 不留', options:[{id:'keep', label:'留', preview:'留'}, {id:'drop', label:'不留', preview:'不留'}]},
   buy:{name:'买 / 不买 / 再等等', options:[{id:'buy', label:'买', preview:'买'}, {id:'skip', label:'不买', preview:'不买'}, {id:'wait', label:'再等等', preview:'再等等'}]},
-  ab:{name:'A / B', custom:true, options:[{id:'a', label:'', preview:'', badge:'A'}, {id:'b', label:'', preview:'', badge:'B'}]},
+  ab:{name:'自己填两个选项', custom:true, options:[{id:'a', label:'', preview:''}, {id:'b', label:'', preview:''}]},
   verdict:{name:'真 / 假 / 看不准', question:'网友判断', note:'将标明「网友判断」，不是平台鉴定结论', options:[{id:'real', label:'真', preview:'真'}, {id:'fake', label:'假', preview:'假'}, {id:'unsure', label:'看不准', preview:'看不准'}]},
   tier:{name:'夯 / 顶级 / 人上人 / NPC / 拉完了', note:'五档评价，针对物品、方案和使用体验', options:[{id:'top', label:'夯', preview:'夯'}, {id:'high', label:'顶级', preview:'顶级'}, {id:'good', label:'人上人', preview:'人上人'}, {id:'npc', label:'NPC', preview:'NPC'}, {id:'done', label:'拉完了', preview:'拉完了'}]}
 };
@@ -306,7 +306,7 @@ function pollSetupHtml(){
   const templates = Object.entries(pollTemplates).map(([id, template]) => chip(compose.poll?.template === id, `data-compose-template="${id}"`, template.name)).join('');
   const current = compose.poll ? pollTemplates[compose.poll.template] : null;
   const question = current ? `<label class="forum-field-label" for="forumPollQuestion">题目</label><input id="forumPollQuestion" maxlength="32" value="${esc(compose.poll.question || '')}">` : '';
-  const custom = current?.custom ? `<label class="forum-field-label" for="forumPollLabelA">选项 A</label><input id="forumPollLabelA" maxlength="16" value="${esc(compose.poll.options[0].label)}"><label class="forum-photo-add">选项 A 配图<input id="forumPollImageA" type="file" accept="image/*"></label><label class="forum-field-label" for="forumPollLabelB">选项 B</label><input id="forumPollLabelB" maxlength="16" value="${esc(compose.poll.options[1].label)}"><label class="forum-photo-add">选项 B 配图<input id="forumPollImageB" type="file" accept="image/*"></label>` : '';
+  const custom = current?.custom ? `<label class="forum-field-label" for="forumPollLabelA">第一个选项</label><input id="forumPollLabelA" maxlength="16" value="${esc(compose.poll.options[0].label)}"><label class="forum-photo-add">配图<input id="forumPollImageA" type="file" accept="image/*" aria-label="第一个选项配图"></label><label class="forum-field-label" for="forumPollLabelB">第二个选项</label><input id="forumPollLabelB" maxlength="16" value="${esc(compose.poll.options[1].label)}"><label class="forum-photo-add">配图<input id="forumPollImageB" type="file" accept="image/*" aria-label="第二个选项配图"></label>` : '';
   const fixed = current && !current.custom ? `<div class="forum-chip-row">${current.options.map(option => `<span class="forum-fixed-option">${esc(option.label)}</span>`).join('')}</div>` : '';
   const note = current?.note ? `<p class="forum-note">${esc(current.note)}</p>` : '';
   return `<p class="forum-field-label">投票模板</p><div class="forum-chip-row" role="group" aria-label="投票模板">${templates}</div>${question}${custom}${fixed}${note}<p class="forum-note">出现第一票后，题目、选项和配图不能再改。投票期间可以改选，你也可以结束投票。</p><p id="forumPollError" class="forum-error" role="status"></p><button type="button" class="forum-submit" id="forumPollDone">完成</button>`;
