@@ -84,6 +84,10 @@ test('forum tiles open the antiques feed without the category chip row',()=>{
   assert.equal(view.querySelector('h1').textContent,'论坛');
   assert.equal(view.querySelector('[data-board="antiques"]').getAttribute('aria-selected'),'true');
   assert.deepEqual([...view.querySelectorAll('.forum-filters button')].map(button=>button.textContent),['全部','圈内新鲜事','懂点门道','一起聊']);
+  assert.equal(view.querySelector('.forum-sort').parentElement,view.querySelector('.forum-channel-row'));
+  assert.equal(view.querySelector('.forum-sort span'),null);
+  assert.match(source('forum.css'),/\.forum-channel-row\{[^}]*flex-direction:column/);
+  assert.match(source('forum.css'),/\.forum-filters\{[^}]*justify-content:space-between/);
   assert.doesNotMatch(view.querySelector('.forum-board-track').textContent,/玉石文玩|邮票|杂项/);
   assert.equal(view.querySelector('.forum-masonry'),null);
   assert.match(view.textContent,/这只青花碗，底足怎么看？/);
