@@ -6,10 +6,7 @@
 .forum-icon-btn{position:relative;width:44px;height:44px;display:grid;place-items:center;color:#f1f0ff}
 .forum-icon-btn svg{width:22px;height:22px}
 .forum-dot{position:absolute;top:10px;right:10px;width:7px;height:7px;border-radius:50%;background:#ff5d6c;box-shadow:0 0 0 2px #0c0c27}
-.forum-search{display:flex;align-items:center;gap:8px;margin:0 16px 4px}
-.forum-search label{font-size:13px;color:#bec3d2}
-.forum-search input,.forum-sheet-panel input,.forum-sheet-panel textarea{width:100%;border:1px solid rgba(166,188,227,.13);border-radius:12px;background:#101321;color:#f1f0ff;font:inherit;font-size:14px}
-.forum-search input{height:40px;padding:0 12px}
+.forum-sheet-panel input,.forum-sheet-panel textarea{width:100%;border:1px solid rgba(166,188,227,.13);border-radius:12px;background:#101321;color:#f1f0ff;font:inherit;font-size:14px}
 .forum-board-track{display:flex;justify-content:center;gap:8px;margin:10px 16px 0;overflow-x:auto;scrollbar-width:none}
 .forum-board-track button{flex:none;min-height:34px;padding:0 12px;border-radius:999px;color:#737c99;font-size:14px;white-space:nowrap}
 .forum-board-track button[aria-selected="true"]{background:#6958ee;color:#fff;box-shadow:inset 0 1px 0 #9185f2}
