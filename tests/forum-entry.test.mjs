@@ -190,6 +190,7 @@ test('publishing from featured asks for a board, and chat posts can add one poll
   f.document.querySelector('[data-forum="antiques"]').click();
   view.querySelector('#forumPublish').click();
   assert.equal(page.querySelector('[data-compose-board="antiques"]').getAttribute('aria-pressed'),'true');
+  assert.deepEqual([...page.querySelectorAll('[data-compose-type]')].map(button=>button.textContent),['一起聊·大家评','分享经验·懂点门道']);
   assert.equal(page.querySelector('#forumAddPoll'),null);
   page.querySelector('[data-compose-type="craft"]').click();
   assert.equal(page.querySelector('#forumAddPoll'),null);

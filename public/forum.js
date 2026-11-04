@@ -268,9 +268,9 @@ function openReport(kind, id){
   byId('forumReport').hidden = false;
 }
 function renderFeedAndDetail(){renderFeed(); renderDetail();}
-const postTypeGroups = [
-  {label:'一起聊 · 大家评', types:[{id:'chat', label:'一起聊', channel:'一起聊'}, {id:'review', label:'大家评', channel:'大家评'}]},
-  {label:'分享经验 · 懂点门道', types:[{id:'share', label:'分享经验', channel:'分享经验'}, {id:'craft', label:'懂点门道', channel:'懂点门道'}]}
+const postTypes = [
+  {id:'chat', label:'一起聊·大家评', channel:'一起聊', poll:true},
+  {id:'craft', label:'分享经验·懂点门道', channel:'懂点门道', poll:false}
 ];
 const pollTemplates = {
   keep:{name:'留 / 不留', options:[{id:'keep', label:'留', preview:'留'}, {id:'drop', label:'不留', preview:'不留'}]},
@@ -293,14 +293,14 @@ function readComposeFields(){
   if (labelA && compose.poll) compose.poll.options[0].label = labelA.value;
   if (labelB && compose.poll) compose.poll.options[1].label = labelB.value;
 }
-function composeType(){return postTypeGroups.flatMap(group => group.types).find(type => type.id === compose.type);}
+function composeType(){return postTypes.find(type => type.id === compose.type);}
 function formHtml(){
   const boards = ['antiques','health','goods'].map(id => chip(compose.board === id, `data-compose-board="${id}"`, boardName[id])).join('');
-  const groups = postTypeGroups.map(group => `<p class="forum-group-label">${esc(group.label)}</p><div class="forum-chip-row" role="group" aria-label="${esc(group.label)}">${group.types.map(type => chip(compose.type === type.id, `data-compose-type="${type.id}"`, type.label)).join('')}</div>`).join('');
+  const types = postTypes.map(type => chip(compose.type === type.id, `data-compose-type="${type.id}"`, type.label)).join('');
   const photos = compose.images.map((src, index) => `<figure><img src="${src}" alt=""><button type="button" class="forum-photo-remove" data-compose-remove-image="${index}" aria-label="移除图片">×</button></figure>`).join('');
   const add = compose.images.length < 3 ? '<label class="forum-photo-add">添加图片<input id="forumComposeImages" type="file" accept="image/*"></label>' : '';
-  const poll = compose.type === 'chat' ? `<button type="button" class="forum-poll-entry" id="forumAddPoll"><span>${compose.poll ? esc(pollTemplates[compose.poll.template].name) : '添加投票'}</span><span aria-hidden="true">›</span></button>${compose.poll ? '<button type="button" class="forum-text-btn" id="forumClearPoll">移除投票</button>' : ''}` : '';
-  return `<p class="forum-field-label">板块</p><div class="forum-chip-row" role="group" aria-label="板块">${boards}</div>${groups}${poll}<label class="forum-field-label" for="forumComposeTitleInput">标题</label><input id="forumComposeTitleInput" maxlength="32" value="${esc(compose.title)}"><label class="forum-field-label" for="forumComposeBody">正文</label><textarea id="forumComposeBody" maxlength="180">${esc(compose.body)}</textarea><p class="forum-field-label">图片</p><div class="forum-photo-row">${photos}${add}</div>`;
+  const poll = composeType()?.poll ? `<button type="button" class="forum-poll-entry" id="forumAddPoll"><span>${compose.poll ? esc(pollTemplates[compose.poll.template].name) : '添加投票'}</span><span aria-hidden="true">›</span></button>${compose.poll ? '<button type="button" class="forum-text-btn" id="forumClearPoll">移除投票</button>' : ''}` : '';
+  return `<p class="forum-field-label">板块</p><div class="forum-chip-row" role="group" aria-label="板块">${boards}</div><p class="forum-field-label">发帖类型</p><div class="forum-chip-row forum-type-row" role="group" aria-label="发帖类型">${types}</div>${poll}<label class="forum-field-label" for="forumComposeTitleInput">标题</label><input id="forumComposeTitleInput" maxlength="32" value="${esc(compose.title)}"><label class="forum-field-label" for="forumComposeBody">正文</label><textarea id="forumComposeBody" maxlength="180">${esc(compose.body)}</textarea><p class="forum-field-label">图片</p><div class="forum-photo-row">${photos}${add}</div>`;
 }
 function pollSetupHtml(){
   const templates = Object.entries(pollTemplates).map(([id, template]) => chip(compose.poll?.template === id, `data-compose-template="${id}"`, template.name)).join('');
@@ -314,7 +314,7 @@ function pollSetupHtml(){
 function previewHtml(){
   const type = composeType();
   const images = compose.images.length ? `<div class="forum-pair">${compose.images.map(src => `<img src="${src}" alt="">`).join('')}</div>` : '';
-  const poll = compose.type === 'chat' && compose.poll ? `<p class="forum-source">${esc(compose.poll.question || pollTemplates[compose.poll.template].name)}</p><div class="forum-chip-row">${compose.poll.options.map(option => `<span class="forum-fixed-option">${esc(option.label || option.badge || '')}</span>`).join('')}</div>` : '';
+  const poll = composeType()?.poll && compose.poll ? `<p class="forum-source">${esc(compose.poll.question || pollTemplates[compose.poll.template].name)}</p><div class="forum-chip-row">${compose.poll.options.map(option => `<span class="forum-fixed-option">${esc(option.label || option.badge || '')}</span>`).join('')}</div>` : '';
   return `<article class="forum-post"><h3 class="forum-detail-heading">${esc(compose.title || '未写标题')}</h3><p class="forum-kicker">${esc(boardName[compose.board] || '未选板块')} · ${esc(type?.label || '未选类型')}</p>${compose.body ? `<p class="forum-body">${esc(compose.body)}</p>` : ''}${images}${poll}</article>`;
 }
 function renderCompose(){
@@ -376,8 +376,8 @@ function publishPost(){
   if (!type) { error.textContent = '先选发帖类型'; return; }
   const title = compose.title.trim();
   if (!title) { error.textContent = '先写标题'; return; }
-  const poll = compose.type === 'chat' && compose.poll ? {template:compose.poll.template, question:compose.poll.question.trim(), ended:false, myVote:null, locked:false, options:compose.poll.options.map(option => ({...option, label:option.label.trim(), preview:option.badge ? `${option.badge}. ${option.label.trim()}` : option.label.trim(), votes:0}))} : null;
-  posts.unshift({id:`mine-${posts.length + 1}`, board:compose.board, channel:type.channel, author:'我', avatar:'is-violet', mine:true, picked:false, pick:99, topic:type.channel, title, body:compose.body.trim(), images:compose.images.slice(), ratio:compose.images.length ? 'mid' : '', likes:0, liked:false, saved:false, at:Date.now(), rank:0, comments:[], ...(poll ? {poll} : {})});
+  const poll = type.poll && compose.poll ? {template:compose.poll.template, question:compose.poll.question.trim(), ended:false, myVote:null, locked:false, options:compose.poll.options.map(option => ({...option, label:option.label.trim(), preview:option.badge ? `${option.badge}. ${option.label.trim()}` : option.label.trim(), votes:0}))} : null;
+  posts.unshift({id:`mine-${posts.length + 1}`, board:compose.board, channel:type.channel, author:'我', avatar:'is-violet', mine:true, picked:false, pick:99, topic:type.label, title, body:compose.body.trim(), images:compose.images.slice(), ratio:compose.images.length ? 'mid' : '', likes:0, liked:false, saved:false, at:Date.now(), rank:0, comments:[], ...(poll ? {poll} : {})});
   error.textContent = '';
   byId('forumCompose').hidden = true;
   forumState.board = compose.board;
@@ -406,7 +406,7 @@ function onComposeClick(event){
   if (event.target.closest('#forumClearPoll')) { compose.poll = null; renderCompose(); return; }
   if (event.target.closest('#forumPollDone')) return finishPoll();
   if (board) { readComposeFields(); compose.board = board.dataset.composeBoard; renderCompose(); return; }
-  if (type) { readComposeFields(); compose.type = type.dataset.composeType; renderCompose(); return; }
+  if (type) { readComposeFields(); compose.type = type.dataset.composeType; if (!composeType()?.poll) compose.poll = null; renderCompose(); return; }
   if (template) {
     readComposeFields();
     if (compose.poll?.template !== template.dataset.composeTemplate) {

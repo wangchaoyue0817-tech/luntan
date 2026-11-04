@@ -141,8 +141,9 @@
 .forum-compose-scroll{flex:1;min-height:0;overflow:auto;padding:4px 16px 16px}
 .forum-compose-bar{flex:none;padding:8px 16px 18px}
 .forum-field-label{display:block;margin:18px 0 8px;color:#f1f0ff;font-size:15px;font-weight:650}
-.forum-group-label{margin:14px 0 8px;color:#bec3d2;font-size:13px}
 .forum-chip-row{display:flex;flex-wrap:wrap;gap:8px}
+.forum-type-row{display:grid;grid-template-columns:1fr 1fr}
+.forum-view .forum-type-row button.forum-chip{width:100%;padding:8px 10px;font-size:13px;line-height:1.3;white-space:normal}
 .forum-view button.forum-chip{min-height:40px;padding:0 14px;border:1px solid transparent;border-radius:12px;background:#1b2032;color:#d8d6ea;font-size:14px}
 .forum-view button.forum-chip[aria-pressed="true"]{background:#222141;border-color:#9f91ff;color:#fff}
 .forum-view button.forum-chip[aria-pressed="true"]:after{content:"✓";margin-left:6px}
@@ -161,4 +162,4 @@
 .forum-poll-shots figure{margin:0}
 .forum-poll-shots img{width:100%;height:120px;object-fit:cover;border-radius:12px;background:#101321}
 .forum-poll-shots figcaption{margin-top:4px;color:#bec3d2;font-size:12px}
-@media(max-width:350px){.forum-board-track{margin-left:12px;margin-right:12px;gap:6px}.forum-board-track button{padding:0 8px;font-size:13px}.forum-filters button{font-size:12px}.forum-sort{margin-right:4px}.forum-sort button{padding:0 10px}.forum-top h1{font-size:24px}.forum-title,.forum-title-btn{font-size:16px}.forum-mosaic{grid-template-rows:72px 72px}.forum-cover.is-tall{height:168px}.forum-cover.is-mid{height:136px}.forum-cover.is-short{height:108px}.forum-tile .forum-title,.forum-tile .forum-title-btn{font-size:13px}.forum-detail-heading{font-size:20px}.forum-hero img{height:180px}}
+@media(max-width:350px){.forum-type-row{grid-template-columns:1fr}.forum-board-track{margin-left:12px;margin-right:12px;gap:6px}.forum-board-track button{padding:0 8px;font-size:13px}.forum-filters button{font-size:12px}.forum-sort{margin-right:4px}.forum-sort button{padding:0 10px}.forum-top h1{font-size:24px}.forum-title,.forum-title-btn{font-size:16px}.forum-mosaic{grid-template-rows:72px 72px}.forum-cover.is-tall{height:168px}.forum-cover.is-mid{height:136px}.forum-cover.is-short{height:108px}.forum-tile .forum-title,.forum-tile .forum-title-btn{font-size:13px}.forum-detail-heading{font-size:20px}.forum-hero img{height:180px}}
