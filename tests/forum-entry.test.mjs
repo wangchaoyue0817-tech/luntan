@@ -173,6 +173,42 @@ test('featured and goods use a two-column waterfall while health stays a single 
   assert.ok(view.querySelector('.forum-mosaic'));
 });
 
+test('publishing from featured asks for a board, and chat posts can add one poll',()=>{
+  const css=source('forum.css');
+  assert.match(css,/\.forum-view button\.forum-publish\{[^}]*linear-gradient/);
+  assert.match(css,/\.forum-view button\.forum-submit\{[^}]*linear-gradient/);
+  const f=fixture();
+  f.document.querySelector('[data-forum="home"]').click();
+  const view=f.document.getElementById('forumView');
+  view.querySelector('#forumPublish').click();
+  const page=f.document.getElementById('forumCompose');
+  assert.equal(page.hidden,false);
+  assert.equal(page.querySelector('#forumComposeTitle').textContent,'发布帖子');
+  assert.equal([...page.querySelectorAll('[data-compose-board]')].some(button=>button.getAttribute('aria-pressed')==='true'),false);
+  f.document.getElementById('forumComposeForm').dispatchEvent({type:'submit'});
+  assert.equal(f.document.getElementById('forumComposeError').textContent,'先选板块');
+  f.document.querySelector('[data-forum="antiques"]').click();
+  view.querySelector('#forumPublish').click();
+  assert.equal(page.querySelector('[data-compose-board="antiques"]').getAttribute('aria-pressed'),'true');
+  assert.equal(page.querySelector('#forumAddPoll'),null);
+  page.querySelector('[data-compose-type="craft"]').click();
+  assert.equal(page.querySelector('#forumAddPoll'),null);
+  page.querySelector('[data-compose-type="chat"]').click();
+  page.querySelector('#forumAddPoll').click();
+  assert.equal(page.querySelector('#forumComposeTitle').textContent,'投票设置');
+  assert.match(page.textContent,/出现第一票后/);
+  page.querySelector('[data-compose-template="keep"]').click();
+  page.querySelector('#forumPollQuestion').value='这只留不留';
+  page.querySelector('#forumPollDone').click();
+  assert.match(page.textContent,/留 \/ 不留/);
+  page.querySelector('#forumComposeTitleInput').value='新帖问留不留';
+  f.document.getElementById('forumComposeForm').dispatchEvent({type:'submit'});
+  assert.equal(page.hidden,true);
+  assert.equal(view.querySelector('[data-board="antiques"]').getAttribute('aria-selected'),'true');
+  assert.match(view.querySelector('#forumFeed').textContent,/新帖问留不留/);
+  assert.match(view.querySelector('#forumFeed').textContent,/留/);
+});
+
 test('an empty forum filter explains that nothing matches',()=>{
   const f=fixture();
   f.document.querySelector('[data-forum="health"]').click();
