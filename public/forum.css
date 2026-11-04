@@ -67,7 +67,7 @@
 .forum-view .forum-poll-preview{display:flex;flex-direction:column;align-items:stretch;gap:6px;width:100%;margin-top:8px;padding:8px;border:1px solid rgba(166,188,227,.13);border-radius:12px;background:#12152a;color:inherit;font:inherit;text-align:left}
 .forum-poll-preview em{color:#c9c2ff;font-size:12px;font-style:normal;font-weight:650}
 .forum-poll-options{display:flex;flex:1;flex-wrap:wrap;gap:6px;min-width:0}
-.forum-poll-options.is-fade{flex-wrap:nowrap;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,#000 0%,#000 62%,transparent 100%);mask-image:linear-gradient(90deg,#000 0%,#000 62%,transparent 100%)}
+.forum-poll-options.is-fade{flex-wrap:nowrap;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,#000 0%,#000 58%,transparent 100%);mask-image:linear-gradient(90deg,#000 0%,#000 58%,transparent 100%)}
 .forum-poll-options span,.forum-poll-options.is-fade span{flex:none;padding:4px 8px;border-radius:8px;background:#1b2032;color:#d8d6ea;font-size:12px;line-height:1.4}
 .forum-tile .forum-poll-preview{margin:8px 10px 0}
 .forum-verdict{margin-top:12px}
