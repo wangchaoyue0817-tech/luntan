@@ -47,6 +47,10 @@ test('homepage banner copy collapses to a single headline line before the CTA',(
   const css=source('app.css');
   assert.match(css,/\.banner-copy strong\{[^}]*white-space:nowrap/);
   assert.ok(!/\.banner-copy>span\{/.test(css));
+  const spectral=source('spectral.css');
+  const bannerHeight=spectral.match(/#aiHome \.feature-banner\{[^}]*height:(\d+)px/)?.[1];
+  const forumHeight=spectral.match(/#aiHome \.forum-card\{[^}]*height:(\d+)px/)?.[1];
+  assert.equal(forumHeight, bannerHeight);
 });
 
 test('forum entry sits below the banner with three resident boards',()=>{
