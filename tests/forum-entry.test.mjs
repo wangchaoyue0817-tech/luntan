@@ -88,16 +88,21 @@ test('forum tiles open the antiques feed without the category chip row',()=>{
   assert.deepEqual([...view.querySelectorAll('.forum-filters button')].map(button=>button.textContent),['全部','圈内新鲜事','懂点门道','一起聊']);
   assert.equal(view.querySelector('.forum-sort').parentElement,view.querySelector('.forum-channel-row'));
   assert.equal(view.querySelector('.forum-sort span'),null);
-  assert.equal(view.classList.contains('is-scrolled'),false);
+  assert.deepEqual([...view.querySelectorAll('.forum-board-track button')].map(button=>button.textContent),['精选','好物研究所','古玩雅集','健康生活家']);
+  assert.match(source('forum.css'),/\.forum-top h1\{[^}]*font-size:20px/);
+  assert.equal(view.classList.contains('is-sort-open'),false);
   assert.equal(view.querySelector('.forum-sort').getAttribute('aria-hidden'),'true');
   const sortFeed=view.querySelector('#forumFeed');
   sortFeed.scrollTop=48;
   sortFeed.dispatchEvent({type:'scroll'});
-  assert.equal(view.classList.contains('is-scrolled'),true);
-  assert.equal(view.querySelector('.forum-sort').getAttribute('aria-hidden'),'false');
+  assert.equal(view.classList.contains('is-sort-open'),false);
   sortFeed.scrollTop=0;
   sortFeed.dispatchEvent({type:'scroll'});
-  assert.equal(view.classList.contains('is-scrolled'),false);
+  assert.equal(view.classList.contains('is-sort-open'),true);
+  assert.equal(view.querySelector('.forum-sort').getAttribute('aria-hidden'),'false');
+  sortFeed.scrollTop=36;
+  sortFeed.dispatchEvent({type:'scroll'});
+  assert.equal(view.classList.contains('is-sort-open'),false);
   assert.match(source('forum.css'),/\.forum-channel-row\{[^}]*flex-direction:column/);
   assert.match(source('forum.css'),/\.forum-filters\{[^}]*justify-content:center/);
   assert.match(source('forum.css'),/\.forum-board-track\{[^}]*justify-content:center/);
@@ -397,6 +402,29 @@ test('every post can be saved, and messages and profile are full pages',()=>{
   f.document.getElementById('forumDetailLike').click();
   assert.equal(down.getAttribute('aria-pressed'),'false');
   assert.equal(f.document.getElementById('forumDetailLike').getAttribute('aria-pressed'),'true');
+});
+
+test('pulling down at the top refreshes the feed and the post detail',()=>{
+  const f=fixture();
+  f.document.querySelector('[data-forum="antiques"]').click();
+  const feed=f.document.getElementById('forumFeed');
+  const hint=f.document.getElementById('forumFeedRefresh');
+  feed.dispatchEvent({type:'pointerdown',clientY:20,button:0,bubbles:true});
+  feed.dispatchEvent({type:'pointermove',clientY:24,button:0,bubbles:true,cancelable:true});
+  assert.equal(hint.hidden,true);
+  feed.dispatchEvent({type:'pointermove',clientY:140,button:0,bubbles:true,cancelable:true});
+  assert.equal(hint.hidden,false);
+  assert.match(hint.textContent,/松开刷新/);
+  feed.dispatchEvent({type:'pointerup',clientY:140,bubbles:true});
+  assert.match(hint.textContent,/刷新中/);
+  f.document.querySelector('[data-open="bowl"]').click();
+  const detail=f.document.getElementById('forumDetailBody');
+  const detailHint=f.document.getElementById('forumDetailRefresh');
+  detail.dispatchEvent({type:'pointerdown',clientY:20,button:0,bubbles:true});
+  detail.dispatchEvent({type:'pointermove',clientY:140,button:0,bubbles:true,cancelable:true});
+  detail.dispatchEvent({type:'pointerup',clientY:140,bubbles:true});
+  assert.match(detailHint.textContent,/刷新中/);
+  assert.match(detail.textContent,/青花碗/);
 });
 
 test('an empty forum filter explains that nothing matches',()=>{
