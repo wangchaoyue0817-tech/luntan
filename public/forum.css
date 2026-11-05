@@ -122,6 +122,17 @@
 .forum-manage-row img{width:56px;height:56px;flex:none;object-fit:cover;border-radius:8px;background:#101321}
 .forum-view .forum-manage-row .forum-profile-copy{flex:1;min-width:0;padding:0;border:0;background:transparent;color:inherit;text-align:left}
 .forum-view .forum-manage-row > button:last-child{flex:none;min-height:36px;padding:0 10px;border-radius:999px;background:#1b2032;color:#d8d6ea;font-size:13px}
+.forum-me-badge{display:inline-block;margin:8px 10px 0;padding:2px 8px;border-radius:999px;background:#1b2032;color:#c9c2ff;font-size:12px}
+.forum-view .forum-me-manage{flex:none;min-height:36px;padding:0 10px;border-radius:999px;background:#1b2032;color:#d8d6ea;font-size:12px}
+.forum-me-note{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:6px 4px;padding:12px;border:1px solid rgba(166,188,227,.13);border-radius:14px;background:#151627}
+.forum-me-note .forum-person{grid-column:1}
+.forum-view .forum-me-note-main{grid-column:1;display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left}
+.forum-me-note .forum-like{grid-column:2;grid-row:1 / span 2;align-self:center}
+.forum-me-note-main strong{font-size:15px;line-height:1.45}
+.forum-me-note-main span,.forum-me-note-main time{color:#aaa9c3;font-size:12px;line-height:1.4}
+#forumMe .forum-masonry{margin-top:4px}
+#forumMe .forum-tile .forum-person.is-chip{flex:1;max-width:none}
+#forumMe .forum-tile .forum-person.is-chip em{min-width:0}
 .forum-detail{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;background:#0c0c27;color:#f1f0ff}
 #forumDetail{z-index:6}
 .forum-detail .forum-top h2{flex:1;margin:0;text-align:center;font-size:17px;font-weight:650}
